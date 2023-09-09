@@ -1,0 +1,526 @@
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+<script>
+function createNewIncident() {
+    //Hide Form, Show Please Wait
+    $('#newIncidentForm').hide();
+    $('#newIncidentCardButtons').hide();
+    $('#newIncidentInprogress').show();
+    //Assign A Defualt Name If Blank
+    var newIncidentLocation = $('input#newIncidentLocation').val()
+    var newIncidentType = $('input#newIncidentType').val();
+    var newIncidentStartDate = $('input#newIncidentStartDate').val();
+    //Run Script            
+    google.script.run.withSuccessHandler(newIncidentSuccess).withFailureHandler(newIncidentSuccess).newIncident(newIncidentLocation, newIncidentType, newIncidentStartDate);
+}
+
+function newIncidentSuccess(e) {
+    resetNewIncidentCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>Successfully created new incident - <a href="https://drive.google.com/drive/folders/' + e[1] + '" target="_blank">' + e[2] + ' </a>.</span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Unable to sucessfully create incident. ' + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadIncidentList();
+}
+
+function resetNewIncidentCard() {
+    $('#newIncidentCard').hide();
+    $('#newIncidentForm')[0].reset();
+    $('#newIncidentForm').show();
+    $('#newIncidentCardButtons').show();
+    $('#addIncidentButton').show();
+    $('#newIncidentInprogress').hide();
+    M.updateTextFields();
+}
+
+function openNewIncidentCard() {
+    resetNewIncidentCard();
+    resetUpdateIncidentCard();
+    resetReportsIncidentCard();
+    $('#newIncidentCard').show();
+    $('#addIncidentButton').hide();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#newIncidentCard").offset().top
+    }, 2000);
+}
+$(document).ready(function() {
+    google.script.run.withSuccessHandler(createIncidentTypeList).getIncidentTypeList();
+});
+
+function createIncidentTypeList(e) {
+    var incidentTypes = new Array();
+    for (var i = 0; i < e.length; i++) {
+        incidentTypes[e[i]] = null;
+    }
+    $(function() {
+        $('#newIncidentType').autocomplete({
+            data: incidentTypes
+        });
+        $('#updateIncidentType').autocomplete({
+            data: incidentTypes
+        });
+    });
+}
+//Date Picker Initailization
+$(document).ready(function() {
+    $('.datepicker').datepicker({
+        format: 'mm/dd/yyyy',
+        yearRange: 50,
+        autoClose: 1,
+        defaultDate: new Date()
+    });
+});
+//UPDATE INCIDENT
+function openUpdateIncidentCard(e) {
+    resetUpdateIncidentCard();
+    resetNewIncidentCard();
+    resetReportsIncidentCard();
+    $('#updateIncidentCard').show();
+    $('#updateIncidentCardTitle').hide();
+    $('#updateIncidentInprogress').show();
+    $('#updateCardBody').hide();
+    $('#updateIncidentCardButtons').hide();
+    $('#updateIncidentTabs').hide();
+    $('#updateIncidentFolderId').val(e);
+    $("#deleteModalFolderId").val(e);
+    google.script.run.withSuccessHandler(createUpdateIncidentCard).getIncidentDetails(e);
+
+
+}
+
+function createUpdateIncidentCard(e) {
+      $('#updateIncidentName').text("Edit the "+ e[1] + " Incident");
+    $('#updateIncidentButton').addClass("disabled");
+    var incidentName = e[1].split(", ");
+    $('#updateIncidentLocation').val(incidentName[0]);
+    $('#updateIncidentType').val(incidentName[1]);
+    $('#updateIncidentNumber').val(e[2]);
+    var startDate = new Date(e[3]);
+    var startDateDisplay = moment(startDate).format("MMM DD, YYYY");
+    $('#updateIncidentStartDate').val(startDateDisplay);
+    $(function() {
+        //Get the datepicker instance
+        let instance = M.Datepicker.getInstance($('#updateIncidentStartDate'));
+        //Using the instance, set the default date
+        instance.setDate(startDate);
+    });
+    if (e[4] != "") {
+        var endDate = new Date(e[4]);
+        var endDateDisplay = moment(endDate).format("MMM DD, YYYY");
+        $('#updateIncidentEndDate').val(endDateDisplay);
+        $(function() {
+            //Get the datepicker instance
+            let instance = M.Datepicker.getInstance($('#updateIncidentEndDate'));
+            //Using the instance, set the default date
+            instance.setDate(endDate);
+        });
+    }
+    console.log("Dates: " + startDate + ", " + endDate)
+    $('#updateIncidentDescription').val(e[5]);
+    M.textareaAutoResize($('#updateIncidentDescription'));
+    var incidentLogData = e[6].replace(/\n/g, '<br>');
+    document.getElementById("updateIncidentLog").innerHTML = incidentLogData;
+    if (e[4] == "") {
+        $('#updateIncidentEndDate').hide();
+        $('#updateIncidentEndDatePresent').show();
+        $('#completeIncidentButton').removeClass("disabled");
+        $('#archiveIncidentButton').addClass("disabled");
+    } else if (e[7] == true) {
+        $('#updateIncidentEndDate').show();
+        $('#updateIncidentEndDatePresent').hide();
+        $('#completeIncidentButton').addClass("disabled");
+        $('#archiveIncidentButton').addClass("disabled");
+        $('#updateIncidentButton').addClass("disabled");
+    } else {
+        $('#updateIncidentEndDate').show();
+        $('#updateIncidentEndDatePresent').hide();
+        $('#completeIncidentButton').addClass("disabled");
+        $('#archiveIncidentButton').removeClass("disabled");
+    }
+    M.updateTextFields();
+    $('#updateIncidentCardTitle').show();
+    $('#updateIncidentCardButtons').show();
+    $('#updateIncidentTabs').show();
+    $('#updateIncidentInprogress').hide();
+    $('#updateCardBody').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#updateIncidentCard").offset().top
+    }, 2000);
+    $("#deleteModalIncidentName").text(e[1]);
+}
+
+function updateIncident() {
+    //Hide Form, Show Please Wait
+    $('#addIncidentButton').hide();
+    $('#updateCardBody').hide();
+    $('#updateIncidentCardButtons').hide();
+    $('#updateIncidentTabs').hide();
+    $('#updateIncidentInprogress').show();
+    var updateIncidentFolderId = $('#updateIncidentFolderId').val();
+    var updateIncidentLocation = $('#updateIncidentLocation').val()
+    var updateIncidentType = $('#updateIncidentType').val();
+    var updateIncidentNumber = $('#updateIncidentNumber').val();
+    var updateIncidentStartDate = $('#updateIncidentStartDate').val();
+    var updateIncidentEndDate = $('#updateIncidentEndDate').val();
+    var updateIncidentDescription = $('#updateIncidentDescription').val();
+    //Run Script            
+    google.script.run.withSuccessHandler(updateSuccess).withFailureHandler(updateSuccess).updateIncident(updateIncidentFolderId, updateIncidentLocation, updateIncidentType, updateIncidentNumber, updateIncidentStartDate, updateIncidentEndDate, updateIncidentDescription);
+}
+
+function updateSuccess(e) {
+    resetUpdateIncidentCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>Successfully updated ' + e[2] + '.</span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Unable to update ' + e[2] + " " + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadIncidentList()
+}
+$(document).ready(function() {
+    $('#updateIncidentForm').change(function() {
+        $('#updateIncidentButton').removeClass("disabled");
+    });
+});
+
+function deleteIncident() {
+    //Hide Form, Show Please Wait
+    $('#addIncidentButton').hide();
+    $('#updateCardBody').hide();
+    $('#updateIncidentCardButtons').hide();
+    $('#updateIncidentTabs').hide();
+    $('#updateIncidentInprogress').show();
+    var deleteIncidentFolderId = $('#deleteModalFolderId').val();
+    //Run Script            
+    google.script.run.withSuccessHandler(deleteSuccess).deleteIncident(deleteIncidentFolderId);
+}
+
+function deleteSuccess(e) {
+    resetUpdateIncidentCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>Successfully deleted ' + e[2] + '.</span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Unable to delete ' + e[2] + " " + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadIncidentList()
+}
+$(document).ready(function() {
+    $('#updateIncidentForm').change(function() {
+        $('#updateIncidentButton').removeClass("disabled");
+    });
+});
+
+function resetUpdateIncidentCard() {
+    $('#updateIncidentCard').hide();
+    $('#addIncidentButton').show();
+    $('#updateIncidentForm')[0].reset();
+    $('#deleteModalForm')[0].reset();
+    $('#updateIncidentForm').show();
+    $('#updateIncidentCardButtons').show();
+    $('#updateActionSection').show();
+    $('#updateIncidentInprogress').hide();
+    $('#updateIncidentTabs').show();
+    $('#updateCardBody').show();
+    $('#updateIncidentEndDatePresent').hide();
+    $('#updateIncidentName').empty();
+
+}
+//close incident
+function completeIncident() {
+    //Hide Form, Show Please Wait
+    $('#updateIncidentForm').hide();
+    $('#updateIncidentCardButtons').hide();
+    $('#updateIncidentTabs').hide();
+    $('#updateIncidentInprogress').show();
+    $('#updateActionSection').hide();
+    $('#addIncidentButton').hide();
+    //Assign A Defualt Name If Blank
+    var updateIncidentFolderId = $('#updateIncidentFolderId').val();
+    //Run Script            
+    google.script.run.withSuccessHandler(updateSuccess).completeIncident(updateIncidentFolderId);
+}
+
+function archiveIncident() {
+    //Hide Form, Show Please Wait
+    $('#updateIncidentForm').hide();
+    $('#updateIncidentCardButtons').hide();
+    $('#updateIncidentInprogress').show();
+    $('#updateIncidentTabs').hide();
+    $('#updateActionSection').hide();
+    $('#addIncidentButton').hide();
+    //Assign A Defualt Name If Blank
+    var updateIncidentFolderId = $('#updateIncidentFolderId').val();
+    console.log("updateIncidentFolderId" + updateIncidentFolderId)
+    //Run Script            
+    google.script.run.withSuccessHandler(updateSuccess).withFailureHandler(updateSuccess).archiveIncident(updateIncidentFolderId);
+}
+//reports incident    
+function openReportsIncidentCard(e) {
+    resetReportsIncidentCard();
+    resetNewIncidentCard();
+    resetUpdateIncidentCard();
+    $('#reportsIncidentCard').show();
+    $('#reportsCardTitle').hide();
+
+    $('#reportsIncidentInprogress').show();
+    $('#reportsCardBody').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentFolderId').val(e);
+    google.script.run.withSuccessHandler(createReportsIncidentCard).getIncidentDetails(e);
+}
+
+function createReportsIncidentCard(e) {
+    $('#reportsIncidentName').text("Generate Reports for "+ e[1]);
+    $('#reportsIncidentInprogress').hide();
+    $('#reportsCardBody').show();
+    $('#reportsCardTitle').show();
+    $('#reportsIncidentCardButtons').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#reportsIncidentCard").offset().top
+    }, 2000);
+    console.log(JSON.stringify(e, null, 2));
+}
+
+function resetReportsIncidentCard() {
+    $('#reportsIncidentCard').hide();
+    $('#reportsCardBody').show();
+    $('#addIncidentButton').show();
+    $('#reportsIncidentForm')[0].reset();
+    $('#reportsIncidentForm').show();
+    $('#reportsIncidentCardButtons').show();
+    $('#reportsIncidentInprogress').hide();
+    $('#reportsIncidentName').empty();
+}
+// Incident Dashboard
+function loadIncidentList() {
+    $('#activeDashboardTable').hide();
+    $('#activeDashboardPreloader').show();
+    $('#archiveDashboardTable').hide();
+    $('#archiveDashboardPreloader').show();
+    $('#active_data').empty();
+    $('#archive_data').empty();
+    $('#activeDashboardNoData').hide();
+    $('#archiveeDashboardNoData').hide();
+    google.script.run.withSuccessHandler(createDashboard).getIncidentDashboardList();
+}
+$(document).ready(function() {
+    loadIncidentList();
+});
+
+function createDashboard(e) {
+    var statusList;
+    if (e === "Undefined" || e == null) {
+        statusList = "";
+    } else {
+        var statusList = e
+    }
+    var activeData = '';
+    var archiveData
+    for (var i = 0; i < statusList.length; i++) {
+        if (statusList[i][6] === false) {
+            ;
+            activeData += '<tr><td>' + statusList[i][0] + '</td><td class ="center-align">' + statusList[i][1] + '</td>';
+            if (statusList[i][2] == "") {
+                activeData += '<td class ="red-text center-align">Ongoing';
+            } else {
+                activeData += '<td class ="center-align">';
+            }
+            activeData += statusList[i][2] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat" href="https://drive.google.com/drive/folders/' + statusList[i][3] + '" target="_blank">Folder</a></td><td class ="center-align"><a class="waves-effect waves-teal btn-flat" href="' + statusList[i][7] + '" target="_blank">Incident Log</a></td><td class ="center-align"><a href="#reportsIncidentCard" class="waves-effect waves-red btn-flat center-align"  onclick="openReportsIncidentCard(\'' + statusList[i][3] + '\' );">Compile</a></td><td class ="center-align"><a href="#updateIncidentCard" class="waves-effect waves-green btn-flat center-align"  onclick="openUpdateIncidentCard(\'' + statusList[i][3] + '\' );">Edit</a></td></tr>';
+        } else {
+            archiveData += '<tr><td>' + statusList[i][0] + '</td><td class ="center-align">' + statusList[i][1] + '</td><td class ="center-align">' + statusList[i][2] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat" href="https://drive.google.com/drive/folders/' + statusList[i][3] + '" target="_blank">Drive</a></td><td class ="center-align"><a href="#archiveModal" class="waves-effect waves-teal btn-flat modal-trigger"  onclick="loadArchiveModal(\'' + statusList[i][3] + '\' );">Reactivate</a></td></tr>';
+        }
+    }
+    if (activeData == "") {
+        $('#activeDashboardNoData').show();
+    } else {
+        $('#active_data').html(activeData);
+        $('#activeDashboardTable').show();
+    }
+    if (archiveData == "") {
+        $('#archiveDashboardNoData').show();
+    } else {
+        $('#archive_data').html(archiveData);
+        $('#archiveDashboardTable').show();
+    }
+    $('#activeDashboardPreloader').hide();
+    $('#archiveDashboardPreloader').hide();
+}
+
+function loadArchiveModal(e) {
+    $("#archiveModalFolderId").val(e);
+    google.script.run.withSuccessHandler(createArchiveModal).getIncidentDetails(e);
+    M.updateTextFields();
+}
+
+function createArchiveModal(e) {
+    $("#archiveModalIncidentName").text(e[1]);
+}
+function archiveReactivate() {
+    $('#archiveModalBody').hide();
+    $('#archiveModalFooter').hide();   
+    $('#archiveInprogress').show();
+    //Hide Form, Show Please Wait
+    //Assign A Defualt Name If Blank
+    var archiveModalFolderId = $('#archiveModalFolderId').val();
+    //Run Script            
+    google.script.run.withSuccessHandler(reactivateSuccess).reactivateIncident(archiveModalFolderId);
+}
+
+function reactivateSuccess(e) {
+    $('#archiveInprogress').hide();
+    $('#archiveModalForm')[0].reset();
+    $('#archiveModalBody').show();
+    $('#archiveModalFooter').show();   
+    let instance = M.Modal.getInstance($('#archiveModal'));
+    instance.close();
+    if (e[0] === true) {
+        var toastHTML = '<span>Successfully reactivated ' + e[2] + '.</span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Unable to reactivate ' + e[2] + " " + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadIncidentList()
+        $('.tabs').tabs('select', 'activeIncidentsTab');
+
+}
+$(document).ready(function() {
+    $('.datepicker').datepicker();
+});
+$(document).ready(function() {
+    $('.modal').modal();
+});
+//////////////
+//REPORTS
+///////////
+function reportsVolRoster() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateRosterReport(incident);
+}
+
+function reportsAssignmentReport() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateAssignmentReport(incident);
+}
+
+function reportsCoverReport() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateCoverReport(incident);
+}
+
+function reportsSynopsisReport() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateSynopsisReport(incident);
+}
+
+function reportsIncidentMapReport() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    console.log("Start generateIncidentMapReport() function");
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateIncidentMapReport(incident);
+}
+
+function reportsFinanceReport() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateFinanceReport(incident);
+}
+function reportsIncidentLogReport() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateIncidentLogReport(incident);
+}
+function reportsEventLogReport() {
+    try {
+        var incident = $('#reportsIncidentFolderId').val();
+        $('#reportsIncidentForm').hide();
+        $('#reportsIncidentCardButtons').hide();
+        $('#reportsIncidentInprogress').show();
+        google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateEventLogReport(incident);
+        return 0;
+    } catch {
+        return 1;
+    }
+}
+function reportsAll() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generateAllReports(incident);
+}
+function reportsCompilePackage() {
+    var incident = $('#reportsIncidentFolderId').val();
+    $('#reportsIncidentForm').hide();
+    $('#reportsIncidentCardButtons').hide();
+    $('#reportsIncidentInprogress').show();
+    google.script.run.withSuccessHandler(reportsWrapup).withFailureHandler(reportsWrapup).generatePackage(incident);
+}
+function reportsWrapup(e) {
+    resetReportsIncidentCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>Requested report is now available in the <a href="' + e[1].toString() + '" target="_blank">incident folder</a>.</span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Unable to sucessfully generate the requested report. ' + e[1].toString() + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadIncidentList()
+}
+$(document).ready(function() {
+    $('.tabs').tabs();
+});
+$(document).ready(function() {
+    $('.modal').modal();
+});
+</script>

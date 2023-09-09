@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body onload="initApp()">
+    <nav class="nav-extended">
+        <div class="nav-wrapper red">
+            <a href="#" class="brand-logo">
+                <span id="userName" style="margin-right: 10px;"></span>
+                Incident Managment System (IMS)
+            </a>
+            <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a class="waves-effect waves-light btn" id="loginButton">Login with Google</a></li>
+                <li><a class="waves-effect waves-light btn blue darken-4" onclick="loadIncidentList();">Refresh</a></li>
+                <li><a href="#newIncidentCard" id="addIncidentButton" class="waves-effect waves-light btn green" onclick="openNewIncidentCard();">New Incident</a></li>
+            </ul>
+        </div>
+        <div class="nav-content blue-grey darken-1">
+            <ul class="tabs tabs-transparent">
+                <li class="tab"><a class="active" href="#activeIncidentsTab">Active Incidents</a></li>
+                <li class="tab"><a href="#archiveIncidentsTab">Archived Incidents</a></li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        <div id="newIncidentCard" class="row" style="display:none">
+            <div class="col s12">
+                <div class="card white">
+                    <div class="card-content">
+                        <span class="card-title red-text">Create New Incident</span>
+                        <form id="newIncidentForm">
+                            <div class="row">
+                                <div class="input-field col s12 m4 l3 xl2">
+                                    <input placeholder="Unnamed Incident" id="newIncidentType" type="text" class="autocomplete">
+                                    <label for="newIncidentType">Incident Type</label>
+                                    <span class="helper-text">Format: Lost Hikers</span>
+                                </div>
+                                <div class="input-field col s12 m4 l3 xl2">
+                                    <input placeholder="Unspecified Location" id="newIncidentLocation" type="text" class="validate">
+                                    <label for="newIncidentLocation">Incident Location</label>
+                                    <span class="helper-text">Format: Deer Mountain</span>
+                                </div>
+                                <div class="input-field col s12 m4 l3 xl1">
+                                    <input id="newIncidentDate" type="text" class="datepicker" placeholder="Today">
+                                    <label for="newIncidentDate">Start Date</label>
+                                    <span class="helper-text">Format: Leave Blank for Current Date</span>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="row center-align" id="newIncidentInprogress" style="display:none">
+                            <div class=" col s12 blue-grey-text darken-1">
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>Creating New Incident Folder ... Go Warm Up The Comm Van ... This May Take a Moment...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="newIncidentCardButtons" class="card-action">
+                        <button id="newIncidentCreateButton" class="btn waves-effect waves-light red" type="submit" onclick="createNewIncident(); return false;">Create Incident</button>
+                        <a id="newIncidentCloseButton" class="waves-effect waves-light btn green" onclick="resetNewIncidentCard();">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="updateIncidentCard" class="row" style="display:none">
+            <div class="col s12">
+                <div class="card">
+                    <div id="updateIncidentCardTitle" class="card-content blue-grey darken-1">
+                        <span id="updateIncidentName" class="card-title white-text">Update Incident</span>
+                    </div>
+                    <div id="updateIncidentTabs" class="card-tabs blue-grey darken-1">
+                        <ul class="tabs tabs-fixed-width tabs-transparent">
+                            <li class="tab"><a href="#updateDetailsSection">Edit Details</a></li>
+                            <li class="tab"><a class="active" href="#updateActionSection">Actions</a></li>
+                            <li class="tab"><a href="#updateLogSection">System Log</a></li>
+                        </ul>
+                    </div>
+                    <div class="card-content">
+                        <div id="updateCardBody">
+                            <div id="updateDetailsSection">
+                                <form id="updateIncidentForm">
+                                    <div class="section">
+                                        <div class="row">
+                                            <div class="input-field col s12 m4 l5">
+                                                <input placeholder="Unnamed Incident" id="updateIncidentType" type="text" class="autocomplete">
+                                                <label for="updateIncidentType">Incident Type</label>
+                                                <span class="helper-text">Format: Lost Hikers</span>
+                                            </div>
+                                            <div class="input-field col s12 m4 l5">
+                                                <input placeholder="Unspecified Location" id="updateIncidentLocation" type="text" class="validate">
+                                                <label for="updateIncidentLocation">Incident Location</label>
+                                                <span class="helper-text">Format: Deer Mountain</span>
+                                            </div>
+                                            <div class="input-field col s12 l2">
+                                                <input id="updateIncidentNumber" type="text" class="validate">
+                                                <label for="updateIncidentNumber">Incident Number</label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="input-field col s6">
+                                                <input id="updateIncidentStartDate" type="text" class="datepicker">
+                                                <label for="updateIncidentStartDate">Start Date</label>
+                                            </div>
+                                            <div class="input-field col s6">
+                                                <input id="updateIncidentEndDate" type="text" class="datepicker">
+                                                <label for="updateIncidentEndDate">End Date</label>
+                                                <input id="updateIncidentEndDatePresent" disabled value="Ongoing" id="disabled" type="text" class="validate red-text" style="display:none">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="input-field col s12">
+                                                <textarea id="updateIncidentDescription" class="materialize-textarea"></textarea>
+                                                <label for="updateIncidentDescription">Incident Description</label>
+                                            </div>
+                                        </div>
+                                        <div class="divider"></div>
+                                        <div class="row"></div>
+                                        <button id="updateIncidentButton" class="btn waves-effect waves-light red disabled" type="submit" onclick="updateIncident(); return false;">Update Incident</button>
+                                        <div class="input-field" style="display: none;">
+                                            <input id="updateIncidentFolderId" type="text">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div id="updateActionSection">
+                                <div class="row">
+                                    <h6>Incident Status</h6>
+                                    <div class="col l1 center-align hide-on-med-and-down"></div>
+                                    <div class="col s12 l2 center-align">
+                                        <a id="newIncidentText" class="waves-effect waves-light btn green disabled" onclick="">Open Incident</a>
+                                    </div>
+                                    <div class="col s12 l2 center-align">
+                                        <a id="respondIncidentText" class="waves-effect waves-light btn green disabled" onclick="">Respond</a>
+                                    </div>
+                                    <div class="col s12 l2 center-align">
+                                        <a id="completeIncidentButton" class="waves-effect waves-light btn green disabled" onclick="completeIncident();">Close Incident</a>
+                                    </div>
+                                    <div class="col s12 l2 center-align">
+                                        <a id="reportIncidentText" class="waves-effect waves-light btn green disabled" onclick="">Compile Report</a>
+                                    </div>
+                                    <div class="col s12 l2 center-align">
+                                        <a id="archiveIncidentButton" class="waves-effect waves-light btn green disabled" onclick="archiveIncident();">Archive Incident</a>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="divider"></div>
+                                    <form>
+                                        <h6>IMS Module Services</h6>
+                                        <div class="col l1 center-align hide-on-med-and-down"></div>
+                                        <div class="col s12 l2 center-align"> Assignment Module <div class="switch">
+                                                <label> Off <input disabled type="checkbox">
+                                                    <span class="lever"></span> On </label>
+                                            </div>
+                                        </div>
+                                        <div class="col s12 l2 center-align"> SPOT Data <div class="switch">
+                                                <label> Off <input disabled type="checkbox">
+                                                    <span class="lever"></span> On </label>
+                                            </div>
+                                        </div>
+                                        <div class="col s12 l2 center-align">Situation Display Module <div class="switch">
+                                                <label> Off <input disabled type="checkbox">
+                                                    <span class="lever"></span> On </label>
+                                            </div>
+                                        </div>
+                                        <div class="col s12 l2 center-align"> Expense Module <div class="switch">
+                                                <label> Off <input disabled type="checkbox">
+                                                    <span class="lever"></span> On </label>
+                                            </div>
+                                        </div>
+                                        <div class="col s12 l2 center-align">
+                                            <a id="moduleIncidentButton" class="waves-effect waves-light btn red disabled" onclick="archiveIncident();">Update Services</a>
+                                        </div>
+                                        </div>
+                                        <div class="row">
+                                                                                <div class="col s12 l2 offset-l9 center-align">
+                                            <a id="deleteIncidentButton" class="waves-effect waves-light btn modal-trigger red" href="#deleteModal">Delete Incident</a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div id="updateLogSection">
+                                <div class="row">
+                                    <div class="col s12">
+                                        <p id="updateIncidentLog" class="flow-text">No Data</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row center-align" id="updateIncidentInprogress" style="display:none">
+                            <div class=" col s12 blue-grey-text darken-1">
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>Updating Incident Data ... Working at the speed of the Comm Van Driving Up Deer Mountain ... </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="updateIncidentCardButtons" class="card-action blue-grey darken-1 right-align">
+                        <a id="updateIncidentCloseButton" class="waves-effect white-text" onclick="resetUpdateIncidentCard()">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="reportsIncidentCard" class="row" style="display:none">
+            <div class="col s12">
+                <div class="card white">
+                    <div id="reportsCardTitle" class="card-content blue-grey darken-1">
+                        <span id="reportsIncidentName" class="card-title white-text">Reports</span>
+                        </div>
+                                            <div class="card-content">
+
+                        <div id="reportsCardBody">
+                        <form id="reportsIncidentForm">
+                            <div class="input-field" style="display: none;">
+                                <input id="reportsIncidentFolderId" type="text">
+                            </div>
+                            <div class="row">
+                                <h6>Incident Report</h6>
+                                <div class="col s12 m3">
+                                    <a id="reportsAll" class="waves-effect waves-brown btn-flat orange white-text" onclick="reportsAll();">All Report Documents</a>
+                                </div>
+                                <div class="col s12 m3">
+                                    <a id="compilePackage" class="waves-effect waves-brown btn-flat orange white-text" onclick="reportsCompilePackage();">Compile Incident Report package</a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <h6>Generate Individual Report Documents</h6>
+                                <div class="col s12 m3">
+                                    <a id="reportsCoverReport" class="waves-effect waves-brown  btn-flat " onclick="reportsCoverReport();">Cover Page</a></div>
+                                <div class="col s12 m3">
+                                    <a id="reportsSynopsisReport" class="waves-effect waves-brown  btn-flat " onclick="reportsSynopsisReport();">Synopsis Template</a></div>
+                                    <div class="col s12 m3">
+                                    <a id="reportsEventLogReport" class="waves-effect waves-brown  btn-flat " onclick="reportsEventLogReport();">Event Log Report</a></div>
+                                                                    <div class="col s12 m2">
+                                    <a id="reportsFinanceReport" class="waves-effect waves-brown  btn-flat " onclick="reportsFinanceReport();">Finance Report</a></div>
+                                <div class="col s12 m3">
+                                    <a id="reportsAssignmentReport" class="waves-effect waves-brown  btn-flat " onclick="reportsAssignmentReport();">Assigment (Team) Report</a></div>
+                                <div class="col s12 m3">
+                                    <a id="reportsVolRoster" class="waves-effect waves-brown  btn-flat " onclick="reportsVolRoster();">Volunteer Roster</a></div>
+
+                                                                    <div class="col s12 m3">
+                                    <a id="reportsMapReport" class="waves-effect waves-brown  btn-flat " onclick="reportsIncidentMapReport();">Incident Map</a></div>
+                                <div class="col s12 m3">
+                                    <a id="reportsIncidentLogReport" class="waves-effect waves-brown  btn-flat " onclick="reportsIncidentLogReport();">Incident Log Report</a></div>
+                                
+                            </div>
+                        </form>
+                        </div>
+                        <div class="row center-align" id="reportsIncidentInprogress" style="display:none">
+                            <div class=" col s12 blue-grey-text darken-1">
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>Creating the requested report ... I know its slow but this is way better than doing it by hand I promise ... </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="reportsIncidentCardButtons" class="card-action blue-grey darken-1 right-align">
+                        <a id="reportsIncidentCloseButton" class="waves-effect white-text" onclick="resetReportsIncidentCard();">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="activeIncidentsTab">
+            <div class="col s12">
+                <h4 class="blue-text text-darken-4">Active Incidents</h4>
+                <div id="activeDashboardPreloader" class="row" style="display:none">
+                    <div class="col s12 center-align blue-grey-text darken-1">
+                        <div class="preloader-wrapper active">
+                            <div class="spinner-layer spinner-red-only">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p>Loading ... Did you remember to put the rope back in the Comm Van after last Wesdnesday's training? ...</p>
+                    </div>
+                </div>
+                <div id="activeDashboardNoData" style="display:none">
+                    <h6 class="center-align green-text">No Active Incidents ... Go Knock on Some Wood</h6>
+                    <div class="divider"></div>
+                </div>
+                <table id=activeDashboardTable class="responsive-table highlight">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="center-align">Start Date</th>
+                            <th class="center-align">End Date</th>
+                            <th class="center-align">Google Drive</th>
+                            <th class="center-align">Logs</th>
+                            <th class="center-align">Reports</th>
+                            <th class="center-align">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active_data">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row" id="archiveIncidentsTab">
+            <div class="col s12">
+                <h4 class="green-text text-darken-4">Archived Incidents</h4>
+                <div id="archiveDashboardPreloader" class="row" style="display:none">
+                    <div class="col s12 center-align blue-grey-text darken-1">
+                        <div class="preloader-wrapper active">
+                            <div class="spinner-layer spinner-red-only">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p>Loading ... Opening the file cabinet in the cloud to pull out the archives...oh look what I found a 41 service manual why do we still have this? ...</p>
+                    </div>
+                </div>
+                <div id="archiveDashboardNoData" style="display:none">
+                    <h6 class="center-align red-text">No Archived Incidents ... Go Find Tai Fast! Somthings Probably Wrong With IMS!</h6>
+                    <div class="divider"></div>
+                </div>
+                <table id="archiveDashboardTable" class="responsive-table highlight">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="center-align">Start Date</th>
+                            <th class="center-align">End Date</th>
+                            <th class="center-align">Files</th>
+                            <th class="center-align">Options</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archive_data">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s12">
+                <h6 id="archive_timestamp" class="right-align"></h6>
+            </div>
+        </div>
+        <!-- Modal Structure -->
+        <div id="archiveModal" class="modal">
+            <form id="archiveModalForm">
+                <div class="modal-content" id="archiveModalBody">
+                    <h4>Reactivate Incident?</h4>
+                    <p>Are you sure you want to change the status of <span id="archiveModalIncidentName"></span> to active?</p>
+                </div>
+                <div style="display:none"> <input id="archiveModalFolderId" type="text"></div>
+            </form>
+            <div class="modal-content row center-align" id="archiveInprogress" style="display:none">
+                <div class=" col s12 blue-grey-text darken-1">
+                    <div class="preloader-wrapper active">
+                        <div class="spinner-layer spinner-red-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>...shuffling selected incident papers between the drawers in the KVRS cumulonimbus</div>
+                </div>
+            </div>
+            <div id="archiveModalFooter"class="modal-footer">
+                <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a class="waves-effect waves-green btn-flat" onclick="archiveReactivate()">Procced</a>
+            </div>
+        </div>
+                <!-- Modal Structure -->
+        <div id="deleteModal" class="modal">
+            <form id="deleteModalForm">
+                <div class="modal-content" id="deleteModalBody">
+                    <h4>Delete Incident?</h4>
+                    <p>Are you sure you want to permanently delete the <span id="deleteModalIncidentName"></span> incident? </p><p>This action cannot be undone and should be used to remove incidents that were created by mistake or created for testing/training purposes only.</p>
+                </div>
+                <div style="display:none"> <input id="deleteModalFolderId" type="text"></div>
+            </form>
+            
+            <div class="modal-footer">
+                <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a class="modal-close waves-effect waves-green btn-flat" onclick="deleteIncident()">Delete</a>
+            </div>
+        </div>
+    </main>
+</body>
+<?!= include('JavaScript'); ?>
+
+<script>
+    function initApp() {
+        const hashFragment = window.location.hash.substr(1);
+        const params = new URLSearchParams(hashFragment);
+
+        if (params.has('access_token')) {
+            const accessToken = params.get('access_token');
+            fetchUserProfile(accessToken);
+            }
+        }
+
+
+    document.getElementById('loginButton').addEventListener('click', function() {
+        var clientId = '883760938624-mt2umkvt4v3k109huqkg8rkuhbmu5lpt.apps.googleusercontent.com';
+        var redirectUri = 'http://localhost:8080/oauth2callback.html'; 
+        var scope = 'https://www.googleapis.com/auth/userinfo.email';
+        var authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=' + clientId + '&redirect_uri=' + redirectUri + '&scope=' + scope;
+
+        window.location.href = authUrl;
+        });
+</script>
+
+
+</html>
