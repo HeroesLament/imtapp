@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!--Import Google Icon Font-->
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+			<!--Import materialize.css-->
+			<link type="text/css" rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+			<!--Let browser know website is optimized for mobile-->
+			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <style>
+.otn {
+   width: 200px;
+}
+
+      </style>
+		</head>
+		<body>
+			<nav class="nav-extended">
+				<div class="nav-wrapper red">
+					<a href="#" class="brand-logo">Incident Managment System (IMS)</a>
+					<a href="#" data-target="mobile-demo" class="sidenav-trigger">
+						<i class="material-icons">menu</i>
+					</a>
+					<ul id="nav-mobile" class="right hide-on-med-and-down">
+						<li>
+							<a class="waves-effect waves-light btn blue darken-4" onclick="getSystemStatus()">Refresh</a>
+						</li>
+					</ul>
+				</div>
+			</nav>
+			<main>
+				<div class="row">
+					<div class="col s12">
+						<h4 class="blue-text text-darken-4">System Status</h4>
+						<div id="dashboardPreloader" class="row" style="display:none">
+							<div class="col s12 center-align blue-grey-text darken-1">
+								<div class="preloader-wrapper active">
+									<div class="spinner-layer spinner-red-only">
+										<div class="circle-clipper left">
+											<div class="circle"></div>
+										</div>
+										<div class="gap-patch">
+											<div class="circle"></div>
+										</div>
+										<div class="circle-clipper right">
+											<div class="circle"></div>
+										</div>
+									</div>
+								</div>
+								<p>Loading ... I'm sure the system's running like fine wine....Just like this old bottle of Boone's Farm ...
+            </p>
+							</div>
+						</div>
+						<div id="activeDashboardNoData" style="display:none">
+							<h6 class="center-align red-text">No status data recieved. This is not a good thing.</h6>
+							<div class="divider"></div>
+						</div>
+						<table id="statusDashboardTable" class="responsive-table highlight">
+							<thead>
+								<tr>
+									<th class="center-align">Script/Functon</th>
+									<th class="center-align">Last Run/Update</th>
+								</tr>
+							</thead>
+							<tbody id="status_data"></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col s12">
+						<h6 id="dashboard_timestamp" class="right-align"></h6>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col s12">
+						<h4 class="red-text">System Tools</h4>
+						<table class="responsive-table highlight">
+							<thead>
+								<tr>
+									<th class="center-align">Command</th>
+									<th class="center-align">Description</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td class="center-align">
+										<a id="forceUpdateButton" class="waves-effect waves-light btn green otn" onclick="forceUpdate()">Force Mapper Update</a>
+									</td>
+									<td>
+                This will command the SPOTAPIIntegration.updateSPOTDataUsers() function to run immidately. This will update the data in the KML feeds by recompiling the Spreadsheet Mapper files with the latest SPOT data avaiable from the IMS Spot Data Tab in the SPOT Beacond Data Sheet.
+              </td>
+								</tr>
+							</tbody>
+							<tbody id="status_data"></tbody>
+						</table>
+					</div>
+				</div>
+			</main>
+		</body>
+		<?!= include('JavaScript'); ?>
+	</html>

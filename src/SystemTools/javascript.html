@@ -1,0 +1,70 @@
+<script src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+<script src = "https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+let refreshInterval;
+$(document).ready(function() {
+    getSystemStatus();
+});
+function getSystemStatus() {
+  $('#dashboardPreloader').show();
+  $('#statusDashboardTable').hide();
+  $('#activeDashboardNoData').hide();
+
+  google.script.run.withSuccessHandler(getSystemStatusWrapup).withFailureHandler(getSystemStatusWrapup).getSystemStatus();
+}
+
+function getSystemStatusWrapup(e) {
+    clearInterval(refreshInterval);
+    var statusList;
+    if (e === "Undefined" || e == null) {
+        statusList = "";
+    } else {
+        var statusList = e;
+    }
+    var dashboard = '';
+    for (var i = 0; i < statusList.length; i++) {
+        dashboard += '<tr><td class="center-align">' + statusList[i][0] + '</td><td class="center-align">' + statusList[i][1] +
+            '</td>';
+    }
+    if (dashboard == "") {
+        $('#activeDashboardNoData').show();
+    } else {
+      
+        $('#status_data').html(dashboard);
+        $('#statusDashboardTable').show();
+    }
+    $('#dashboard_timestamp').html("<em>As of " + Date() + "</em>");
+    $('#dashboardPreloader').hide();
+        var spotDtg =  new Date(e[0][1]).getTime();
+    var nextSpotDtg = spotDtg+305000;
+        var updateDtg =  new Date().getTime();
+    var adjustment = nextSpotDtg-updateDtg;
+refreshInterval = setInterval(getSystemStatus, adjustment);
+}
+
+
+function forceUpdate() {
+      $('#forceUpdateButton').addClass("disabled");
+              $('#forceUpdateButton').text("Mapper Update In Progress");
+
+    google.script.run.withSuccessHandler(forceUpdateWrapup).withFailureHandler(forceUpdateWrapup).forceUpdate();
+}
+
+function forceUpdateWrapup(e) {
+    if (e[0] === true) {
+        var toastHTML = '<span>Mapper Update Complete.</span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Mapper Update Failed. ' + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    $('#forceUpdateButton').removeClass("disabled");
+        $('#forceUpdateButton').text("Force Mapper Update");
+
+    getSystemStatus();
+}</script>
