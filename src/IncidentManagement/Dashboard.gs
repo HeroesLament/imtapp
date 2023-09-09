@@ -3,63 +3,53 @@ function getIncidentDashboardList() {
   var sheet = ss.getSheetByName("IMS Incident Log");
   var sheetLastRow = sheet.getLastRow();
   var sheetLastColumn = sheet.getLastColumn();
-  var sheetHeaders = sheet.getRange(1, 1, 1, sheetLastColumn).getValues();
-  var sheetHeadersLen = sheetHeaders[0].length;
+  
+  var sheetHeaders = sheet.getRange(1, 1, 1, sheetLastColumn).getValues()[0];
+  var headerMap = {};
+  sheetHeaders.forEach(function(header, index) {
+    headerMap[header] = index;
+  });
+
   var sheetData = sheet.getRange(2, 1, (sheetLastRow - 1), sheetLastColumn).getValues();
-  var sheetDataLen = sheetData.length;
   var incidents = [];
-  var colArchived
-  var colIncidentName
-  var colIncidentFolder
-  var colIncidentStartDate
-  var colIncidentEndDate
-  var colIncidentNumber
-  var colIncidentDescription
-  var colIncidentLog
-  for (var hrow = 0; hrow < sheetHeadersLen; hrow++) {
-    if (sheetHeaders[0][hrow] == "ARCHIVED") {
-      colArchived = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_NAME") {
-      colIncidentName = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_FOLDER_ID") {
-      colIncidentFolder = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_START_DATE") {
-      colIncidentStartDate = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_END_DATE") {
-      colIncidentEndDate = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_NUMBER") {
-      colIncidentNumber = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_DESCRIPTION") {
-      colIncidentDescription = hrow
-    } else if (sheetHeaders[0][hrow] == "INCIDENT_LOG_ID") {
-      colIncidentLog = hrow
-    } else {
-      continue;
-    }
-  }
+
   var tz = Session.getScriptTimeZone();
-  for (var drow = 0; drow < sheetDataLen; drow++) {
-    var incindentStatus = "";
-    var incidentName = "";
-    var incidentFolder = "";
-    var incidentNumber = ""
-    var incidentEndDate = "";
-    var incidentStartDate = "";
+
+  for (var drow = 0; drow < sheetData.length; drow++) {
+    var rowData = sheetData[drow];
+    
+    var incidentEndDate = rowData[headerMap["INCIDENT_END_DATE"]];
+    var incidentStartDate = rowData[headerMap["INCIDENT_START_DATE"]];
+    var incidentLogId = rowData[headerMap["INCIDENT_LOG_ID"]];
+    
     var incidentLogUrl = "";
-    incidentEndDate = sheetData[drow][colIncidentEndDate];
-    incidentStartDate = sheetData[drow][colIncidentStartDate];
-    var inicentLogId = sheetData[drow][colIncidentLog];
-    if (sheetData[drow][colArchived] != "true") {
-      incidentLogUrl = getFileUrlById(inicentLogId);
+    if (rowData[headerMap["ARCHIVED"]] != "true") {
+      incidentLogUrl = getFileUrlById(incidentLogId);
     }
-    if (incidentEndDate === "" || incidentEndDate === null || incidentEndDate === "undefined") {
+
+    if (!incidentEndDate) {
       incidentEndDate = "";
     } else {
       incidentEndDate = Utilities.formatDate(new Date(incidentEndDate), tz, "MMMM dd, yyyy");
     }
+
     incidentStartDate = Utilities.formatDate(new Date(incidentStartDate), tz, "MMMM dd, yyyy");
-    incidents.push([sheetData[drow][colIncidentName], incidentStartDate.toString(), incidentEndDate.toString(), sheetData[drow][colIncidentFolder], sheetData[drow][colIncidentNumber], sheetData[drow][colIncidentDescription], sheetData[drow][colArchived], incidentLogUrl])
+    
+    incidents.push([
+      rowData[headerMap["INCIDENT_NAME"]], 
+      incidentStartDate.toString(), 
+      incidentEndDate.toString(), 
+      rowData[headerMap["INCIDENT_FOLDER_ID"]], 
+      rowData[headerMap["INCIDENT_NUMBER"]], 
+      rowData[headerMap["INCIDENT_DESCRIPTION"]], 
+      rowData[headerMap["ARCHIVED"]], 
+      incidentLogUrl
+    ]);
   }
+
+  return incidents; 
+}
+
 
   function sortFunctionAssignByDate(a, b) {
     var o1 = new Date(a[2]);
