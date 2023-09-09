@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="fab" class="fixed-action-btn toolbar hide-on-large-only" style="display:none">
+        <a class="btn-floating btn-large red">
+            <i class="large material-icons">add_circle</i>
+        </a>
+        <ul>
+            <li><a class="btn-floating " onclick="openAddPoiCard()"><i class="material-icons">add_circle</i></a></li>
+        </ul>
+    </div>
+    <nav id="navbar" class="hide-on-med-and-down" style="display:none">
+        <div class="navbar-fixed hide-on-med-and-down">
+            <nav>
+                <div class="nav-wrapper red">
+                    <a class="brand-logo">Incident: <span id="navIncidentNameText" onclick="openSelectIncidentCard()"></span></a>
+                    <ul class="right hide-on-med-and-down">
+                        <li><a onclick="openAddPoiCard()">Add Point Of Interest</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </nav>
+    <main>
+        <div class="row">
+            <div class="col s12 l6 offset-l3">
+                <div id="selectIncidentCard" class="card white">
+                    <div class="card-content blue-grey-text darken-1">
+                        <span class="card-title">Select Incident</span>
+                        <div id="selectIncidentMenu" style="display:none">
+                            <form> <select id="incident" class="browser-default">
+                                    <option value="" disabled selected>Loading...</option>
+                                </select>
+                            </form>
+                        </div>
+                        <div class="row center-align" id="selectIncidentInprogress" style="display:none">
+                            <div class="col s12">
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>Building Incident Menu...Comm Van Standing By KVRS Direct</div>
+                            </div>
+                        </div>
+                        <div id="selectIncidentMessage" style="display:none">
+                        </div>
+                    </div>
+                    <div id="selectIncidentCardButton" class="card-action" style="display:none">
+                        <a id="selectIncidentCloseButton" class="waves-effect waves-light btn green" onclick="closeSelectIncidentCard();">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="GPM" style="display:none">
+            <div class="row">
+                <div class="col s12">
+                    <h4 class="center-align hide-on-large-only red-text">Incident: </h4>
+                    <h4 class="center-align hide-on-large-only red-text" id="mobileIncidentNameText"></h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div id="addPoiCard" class="row" style="display:none">
+                        <div class="col s12 l6">
+                            <div class="card white">
+                                <div class="card-content green-text text-darken-4">
+                                    <span class="card-title">Add Point Of Interest (POI)</span>
+                                    <div id="addPoiBody">
+                                        <form id="addPoiForm">
+                                            <div class="row">
+                                                <div class="input-field col s8">
+                                                    <input placeholder="POI Title" id="addPoiTitle" type="text" class="validate">
+                                                    <label for="addPoiTitle">Title</label>
+                                                </div>
+                                                <div class="input-field col s4">
+                                                    <select id="addPoiIcon">
+                                                        <option value="" disabled selected>Loading....</option>
+                                                    </select>
+                                                    <label for="addPoiIcon">Map Icon</label>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-field col s6">
+                                                    <input placeholder="55.40919" id="addPoiLatitude" min="-90.00" step="0.00001" type="number" class="validate">
+                                                    <label for="addPoiLatitude">Latitude</label>
+                                                    <span class="helper-text">Decimal Deg: N(+)|S(-)</span>
+                                                </div>
+                                                <div class="input-field col s6">
+                                                    <input placeholder="-131.73182" id="addPoiLongitude" min="-180.00" step="0.00001" type="number" class="validate">
+                                                    <label for="addPoiLongitude">Longitude</label>
+                                                    <span class="helper-text">Decimal Degrees: W(-)|E(+)</span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col s12">
+                                                    <button id="addCurrentPos" class="btn waves-effect waves-light" name="action">Use My Current Location <i class="material-icons right">gps_fixed</i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-field col s12">
+                                                    <textarea id="addPoiNotes" class="materialize-textarea"></textarea>
+                                                    <label for="addPoiNotes">Notes</label>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-field">
+                                                    <i class="material-icons prefix">person</i>
+                                                    <input type="text" id="addReportingUser" class="autocomplete" placeholder="Name of KVRS Member Providing Image">
+                                                    <label for="addReportingUser">Reported By</label>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="file-field input-field">
+                                                    <div id="addPhotoButton" class="btn">
+                                                        <i class="material-icons left">add_a_photo</i>
+                                                        <span>Photo/Image File</span>
+                                                        <input id="addPhoto" type="file">
+                                                    </div>
+                                                    <div class="file-path-wrapper">
+                                                        <input class="file-path validate" type="text" placeholder="Select File">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="row  center-align" id="addPoiInprogress" style="display:none">
+                                        <div class=" col s12 blue-grey-text darken-1">
+                                            <div class="preloader-wrapper active">
+                                                <div class="spinner-layer spinner-red-only">
+                                                    <div class="circle-clipper left">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                    <div class="gap-patch">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                    <div class="circle-clipper right">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>Sendng this byte by byte up the pipe ... it may be a moment go take a cat nap if your on vSat </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="addPoiButtons" class="card-action">
+                                    <a id="addPoiSubmitButton" class="btn waves-effect waves-light green disabled" onclick="addPoi()">Add POI</a>
+                                    <a id="addPoiClose" class="waves-effect waves-light red btn" onclick="resetAddPoiCard()">Close</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="updatePoiCard" class="row" style="display:none">
+                        <div class="col s12 l6">
+                            <div class="card white">
+                                <div class="card-content indigo-text text-darken-4">
+                                    <span class="card-title">Update POI</span>
+                                    <div id="updatePoiBody">
+                                        <form id="updatePoiForm">
+                                            <div class="row">
+                                                <div class="input-field col s8">
+                                                    <input placeholder="POI Title" id="updatePoiTitle" type="text" class="validate">
+                                                    <label for="updatePoiTitle">Title</label>
+                                                </div>
+                                                <div class="input-field col s4">
+                                                    <select id="updatePoiIcon">
+                                                        <option value="" disabled selected>Loading....</option>
+                                                    </select>
+                                                    <label for="updatePoiIcon">Map Icon</label>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-field col s6">
+                                                    <input placeholder="55.40919" id="updatePoiLatitude" min="0.00" step="0.00001" type="number" class="validate">
+                                                    <label for="updatePoiLatitude">Latitude</label>
+                                                    <span class="helper-text">Decimal Deg: N(+)|S(-)</span>
+                                                </div>
+                                                <div class="input-field col s6">
+                                                    <input placeholder="-131.73182" id="updatePoiLongitude" min="0.00" step="0.00001" type="number" class="validate">
+                                                    <label for="updatePoiLongitude">Longitude</label>
+                                                    <span class="helper-text">Decimal Degrees: W(-)|E(+)</span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col s12">
+                                                    <button id="updateCurrentPos" class="btn waves-effect waves-light" name="action">Use My Current Location <i class="material-icons right">gps_fixed</i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-field col s12">
+                                                    <textarea id="updatePoiNotes" class="materialize-textarea"></textarea>
+                                                    <label for="updatePoiNotes">Notes</label>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="input-field">
+                                                    <i class="material-icons prefix">person</i>
+                                                    <input type="text" id="updateReportingUser" class="autocomplete" placeholder="Name of KVRS Member Providing Image">
+                                                    <label for="updateReportingUser">Reported By</label>
+                                                </div>
+                                            </div>
+                                            <div id="updatePhotoDisplay" class="row" style="display:none">
+                                                <div class="col s12">
+                                                    <img id="updatePhotoIMG" src="https://drive.google.com/uc?id=1Yh9F_s46Jzh4Lvcker0HpgedGOKQV1CR" alt="POI Imagery File" width="256">
+                                                </div>
+                                            </div>
+                                            <div id="updatePhotoBox" class="row" style="display:none">
+                                                <div class="file-field input-field">
+                                                    <div id="updatePhotoButton" class="btn">
+                                                        <i class="material-icons left">add_a_photo</i>
+                                                        <span>Photo/Image File</span>
+                                                        <input id="updatePhoto" type="file">
+                                                    </div>
+                                                    <div class="file-path-wrapper">
+                                                        <input class="file-path validate" type="text" placeholder="Select File">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style="display:none"> <input id="updatePoiId" type="text"></div>
+                                            <div style="display:none"> <input id="updatePoiRow" type="text"></div>
+                                        </form>
+                                    </div>
+                                    <div class="row" id="updatePoiInprogress" style="display:none">
+                                        <div class=" col s12 blue-grey-text darken-1">
+                                            <div class="preloader-wrapper active">
+                                                <div class="spinner-layer spinner-red-only">
+                                                    <div class="circle-clipper left">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                    <div class="gap-patch">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                    <div class="circle-clipper right">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>If you had done this right the first time we wouldn't be here waiting on this slow update process now would we?</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="updatePoiButtons" class="card-action">
+                                    <a id="updatePoiSubmitButton" class="btn waves-effect waves-light indigo disabled" onclick="updatePoi()">Update POI</a>
+                                    <a id="updatePoiClose" class="waves-effect waves-light btn red" onclick="resetUpdatePoiCard()">Close</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div id="dashboard" class="card">
+                        <div class="card-content">
+                            <span id="dashboardTitle" class="card-title orange-text text-darken-4"><span id="dashboardTitleIncident"></span> Active Points Of Interest (POI)</span>
+                            <div class="row">
+                                <div class="row">
+                                    <div class="col s12">
+                                        <button class="waves-effect waves-light btn submit-btn orange darken-4" type="button" onclick="loadPoiList(); return false;">Refresh<i class="material-icons right"></i></button>
+                                        <div class="switch">
+                                            <label> Auto Refresh: Off <input id="autoRefresh" type="checkbox" onclick="autoRefreshDashboard()" checked="checked" class="orange darken-4">
+                                                <span class="lever"></span> On </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="dashboardPreloader" class="row" style="display:none">
+                                    <div class="col s12 center-align blue-grey-text darken-1">
+                                        <div class="preloader-wrapper active">
+                                            <div class="spinner-layer spinner-red-only">
+                                                <div class="circle-clipper left">
+                                                    <div class="circle"></div>
+                                                </div>
+                                                <div class="gap-patch">
+                                                    <div class="circle"></div>
+                                                </div>
+                                                <div class="circle-clipper right">
+                                                    <div class="circle"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p>Searching though the chart table drawers ... is that a manikin head?! ... </p>
+                                    </div>
+                                </div>
+                                <div class="row"id="dashboardNoData" style="display:none">
+                                    <div class ="col s12">
+                                        <h6 class="center-align red-text">No points of interest have been added to this incident yet...maybe its time to add one?</h6>
+                                        <div class="divider"></div>
+                                    </div>
+                                </div>
+                                <table id="dashboardTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Display Icon</th>
+                                            <th>POI Title</th>
+                                            <th>Latitude</th>
+                                            <th>Longitude</th>
+                                            <th>Notes</th>
+                                            <th>Photo/Image</th>
+                                            <th>Reported By</th>
+                                            <th>Added</th>
+                                            <th>Added By</th>
+                                            <th class="center-align">Update</th>
+                                            <th class="center-align">Remove</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboard_data">
+                                        <tr>
+                                            <td>Select Incident...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="row">
+                                    <div class="col s12">
+                                        <h6 id="dashboard_timestamp" class="right-align"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Modal Structure -->
+                    <div id="removePoiModal" class="modal">
+                        <div class="modal-content">
+                            <h4>Confirm POI Removal</h4>
+                            <form id="removePoiForm">
+                                <div class="row">
+                                    <div class="col s12">Are you sure you want to remove <strong><span id="removeModalPoiTitleText">Loading</span></strong> (<span id="removeModalPoiLatitudeText">Loding</span>, <span id="removeModalPoiLongitudeText">Loading</span>) ? </div>
+                                </div>
+                                <div class="row">
+                                    <div class="input-field col s12"><input id="removeJustfication" type="text"><label for="removeJustfication">Justification</label></div>
+                                </div>
+                                <div style="display:none"> <input id="removeModalPoiRow" type="text"></div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+                            <a class="modal-close waves-effect waves-green btn-flat" onclick="removePoi()">Procced</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+<?!= include('JavaScript'); ?>
+
+</html>

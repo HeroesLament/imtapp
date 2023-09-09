@@ -1,0 +1,522 @@
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+      
+///////////////////////
+//SELECT INCIDENT MENU
+///////////////////////
+
+// The code in this function runs when the page is loaded.
+$(document).ready(function() {
+    openSelectIncidentCard();
+});
+
+function loadSelectIncidentMenu(incidents) {
+    $('#incident').empty();
+    var option = '';
+    for (var i = 0; i < incidents.length; i++) {
+        if (incidents.length > 1 && i === 0) {
+            option += '<option value="" disabled selected>Select Incident...</option>';
+        }
+        if (incidents.length > 1) {
+            option += '<option value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+        if (incidents.length == 1) {
+            option += '<option  value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+    }
+    $('#selectIncidentInprogress').hide();
+    //If there is no active  incidents
+    if (option == "") {
+        option += '<option value="" disabled selected>No Open Incidents</option>';
+        $('#selectIncidentMessage').html('There are no active incidents the system....Don\'t worry somone will get lost soon...<a class="waves-effect waves-teal btn-flat" onclick="openSelectIncidentCard()">Try Again</a>');
+        $('#selectIncidentMenu').hide();
+        $('#selectIncidentMessage').show();
+        return
+    }
+    $('#incident').append(option);
+    //if there is only one incident load the data
+    if (incidents.length == 1) {
+        $('#selectIncidentMessage').html("There is only one incident active in the system... going out on a limb here and guessing you want that one...");
+        $('#selectIncidentMessage').show();
+        setTimeout(function() {
+            loadIncidentSelection();
+        }, 2000);
+        return
+    }
+    //show selcect menu
+    $('#selectIncidentMenu').show();
+    //Materilize Initation
+    $('select').formSelect();
+    var isVisible = $('#MAM').is(':visible');
+    if (isVisible === true) {
+        $('#selectIncidentCardButton').show();
+    }
+}
+
+function closeSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentCardButton').show();
+    $('#selectIncidentCard').hide();
+}
+
+function openSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentMessage').empty();
+    $('#selectIncidentMenu').hide();
+    $('#selectIncidentCardButton').hide();
+    $('#selectIncidentCard').show();
+    $('#selectIncidentInprogress').show();
+    resetAddPoiCard();
+    resetUpdatePoiCard();
+    google.script.run.withSuccessHandler(loadSelectIncidentMenu).getOpenIncidents();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#selectIncidentCard").offset().top
+    }, 2000);
+}
+//incidet select
+function loadIncidentSelection() {
+    closeSelectIncidentCard();
+    $('#GPM').hide();
+    loadPoiList();
+    $('#GPM').show();
+    $('#navbar').show();
+    $('#fab').show();
+    var incidentName = $('#incident option:selected').text();
+    $('#mobileIncidentNameText').text(incidentName);
+    $('#navIncidentNameText').text(incidentName);
+}
+//Load RSL On Incident Selection
+$(document).ready(function() {
+    $('#incident').change(function() {
+        loadIncidentSelection();
+    });
+});
+//Runs on load of page
+$(document).ready(function() {
+    google.script.run.withSuccessHandler(createAutoCompleteMemberMenu).createMemberRoster();
+});
+//Create The Member Checkin AutoCompelte
+//Also creates the one for standby
+function createAutoCompleteMemberMenu(e) {
+    var members = new Array();
+    for (var i = 0; i < e.length; i++) {
+        members[e[i]] = null;
+    }
+    $(function() {
+        $('#addReportingUser').autocomplete({
+            data: members
+        });
+        $('#updateReportingUser').autocomplete({
+            data: members
+        });
+    });
+}
+  
+  ///////////////////////
+  //Add Poi Card
+  //////////////////////////
+function openAddPoiCard() {
+    resetAddPoiCard();
+    resetUpdatePoiCard();
+    $('#addPoiCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#addPoiCard").offset().top
+    }, 2000);
+}
+
+function resetAddPoiCard() {
+    $('#addPoiCard').hide();
+    $('#addPoiBody').show();
+    $('#addPoiButtons').show();
+    $('#addPoiInprogress').hide();
+    $('#addPoiForm')[0].reset();
+    $('#addPoiIcon option').prop('selected', false);
+    $('select').formSelect();
+    addPoiButton();
+}
+
+function addPoiButton() {
+    var title = $("#addPoiTitle").val();
+    var latitude = $("#addPoiLatitude").val();
+    var longitude = $("#addPoiLongitude").val();
+    if (title == "" || title == null || title == undefined || latitude == "" || latitude == null || latitude == undefined || longitude == "" || longitude == null || longitude == undefined) {
+        $("#addPoiSubmitButton").addClass("disabled");
+    } else {
+        $("#addPoiSubmitButton").removeClass("disabled");
+    }
+    M.updateTextFields();
+}
+//Load Disable Button If Empty
+$(document).ready(function() {
+    $('#addPoiForm').change(function() {
+        addPoiButton();
+    });
+    
+    $('#addPoiLatitude').change(function() {
+        addPoiButton();
+        var addPoiLatitude = $("#addPoiLatitude").val();
+        addPoiLatitude = Number(addPoiLatitude).toFixed(5);
+        $("#addPoiLatitude").val(addPoiLatitude);
+    });
+    $('#addPoiLongitude').change(function() {
+        addPoiButton();
+        var addPoiLongitude = $("#addPoiLongitude").val();
+        addPoiLongitude = Number(addPoiLongitude).toFixed(5);
+        $("#addPoiLongitude").val(addPoiLongitude);
+    });
+});
+$(document).ready(function() {
+    google.script.run.withSuccessHandler(loadIconMenu).getAvailableIcons();
+});
+
+function loadIconMenu(icon) {
+    $('#addPoiIcon').empty();
+    $('#updatePoiIcon').empty();
+    var option = '';
+    for (var i = 0; i < icon.length; i++) {
+        if (icon.length > 1 && i === 0) option += '<option value="" selected>Select Map Icon...</option>';
+        option += '<option value="' + icon[i][0].toString() + '" data-icon="' + icon[i][0].toString() + '" class="left">' + icon[i][1].toString() + '</option>';
+    }
+    if (option == "") option += '<option value="" disabled selected>No Available Icons</option>';
+    $('#addPoiIcon').append(option);
+    $('#updatePoiIcon').append(option);
+    //Materilize Initation
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+}
+
+function addPoi() {
+    $('#addPoiBody').hide();
+    $('#addPoiButtons').hide();
+    $('#addPoiInprogress').show();
+    var title = $("#addPoiTitle").val();
+    var incidentLog = $("#incident").val();
+    var latitude = $("#addPoiLatitude").val();
+    var longitude = $("#addPoiLongitude").val();
+    var icon = $("#addPoiIcon").val();
+    var notes = $("#addPoiNotes").val();
+    var reportedUser = $("#addReportingUser").val();
+    var files = $('#addPhoto')[0].files;
+    var file = files[0];
+    if (file != "" && file != undefined && file != null) {
+        console.log("Run Check File Size");
+        if (file.size > 1024 * 1024 * 5) {
+            var toastHTML = '<span>The selected file exceeds the 5 MB size limit.</span>';
+            var toastColor = "red";       
+            M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+            $('#addPoiBody').show();
+            $('#addPoiButtons').show();
+            $('#addPoiInprogress').hide();
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var picFile = reader.result;
+            google.script.run.withSuccessHandler(successAddPoi).addPoi(incidentLog, title, latitude, longitude, icon, notes, reportedUser, picFile);
+        }
+        reader.readAsDataURL(file);
+    } else {
+        google.script.run.withSuccessHandler(successAddPoi).addPoi(incidentLog, title, latitude, longitude, icon, notes, reportedUser);
+    }
+}
+
+function successAddPoi(e) {
+    resetAddPoiCard();    
+    if (e[0] === true) {
+        var toastHTML = '<span>'+e[1]+ ' added.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Unable to add POI. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+    loadPoiList();
+}
+//////////////////////
+//REMOVE POI
+////////////////////
+function loadRemovePoiModal(poiRow) {
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(successGetRemovePoiData).getPoiData(incidentLog, poiRow);
+    $("#removeModalPoiRow").val(poiRow);
+    M.updateTextFields();
+}
+
+function successGetRemovePoiData(data) {
+    document.getElementById("removeModalPoiTitleText").textContent = data[0][1].toString();
+    document.getElementById("removeModalPoiLatitudeText").textContent = data[0][2].toString();
+    document.getElementById("removeModalPoiLongitudeText").textContent = data[0][3].toString();
+}
+
+function removePoi() {
+    var incidentLog = $("#incident").val();
+    var poiRow = $("#removeModalPoiRow").val();
+    var justify = $("#removeJustfication").val();
+
+    google.script.run.withSuccessHandler(successRemovePoi).removePoi(incidentLog, poiRow, justify);
+    $('#removePoiForm')[0].reset();
+}
+
+function successRemovePoi(e) {
+    if (e[0] === true) {
+        var toastHTML = '<span>'+e[1]+ ' removed.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Unable to remove POI. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+    loadPoiList();
+}
+
+//////////////////
+//Update POI
+///////////////////////
+
+function loadUpdatePoiCard(poiRow) {
+    resetUpdatePoiCard();
+    resetAddPoiCard();
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(successGetUpdatePoiData).getPoiData(incidentLog, poiRow);
+    $("#updatePoiRow").val(poiRow);
+}
+
+function successGetUpdatePoiData(data) {
+    $("#updatePoiId").val(data[0][0]);
+    $("#updatePoiTitle").val(data[0][1]);
+    $("#updatePoiLatitude").val(data[0][2]);
+    $("#updatePoiLongitude").val(data[0][3]);
+    $("#updatePoiIcon").val(data[0][4]);
+    $("#updatePoiNotes").val(data[0][5]);
+    $("#updateReportingUser").val(data[0][8]);
+    console.log("data[0][10]: " + data[0][10])
+    if (data[0][10] === null) {
+        $('#updatePhotoBox').show();
+    } else {
+        $('#updatePhotoDisplay').show();
+        document.getElementById("updatePhotoIMG").src = data[0][10];
+        var imgDone = document.getElementById("updatePhotoIMG").complete;
+        if (imgDone === false) {
+            //  document.getElementById("updatePhotoIMG").src = "https://drive.google.com/uc?id=1Yh9F_s46Jzh4Lvcker0HpgedGOKQV1CR";
+        }
+    }
+    M.updateTextFields();
+    $('select').formSelect();
+    $('#updatePoiCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#updatePoiCard").offset().top
+    }, 2000);
+}
+
+function updatePoi() {
+    $('#updatePoiBody').hide();
+    $('#updatePoiButtons').hide();
+    $('#updatePoiInprogress').show();
+    var title = $("#updatePoiTitle").val();
+    var incidentLog = $("#incident").val();
+    var latitude = $("#updatePoiLatitude").val();
+    var longitude = $("#updatePoiLongitude").val();
+    var icon = $("#updatePoiIcon").val();
+    var notes = $("#updatePoiNotes").val();
+    var existingRow = $("#updatePoiRow").val();
+    var existingId = $("#updatePoiId").val();
+    var reportedUser = $("#updateReportingUser").val();
+    var files = $('#updatePhoto')[0].files;
+    var file = files[0];
+    if (file != "" && file != undefined && file != null) {
+        console.log("Run Check File Size");
+        if (file.size > 1024 * 1024 * 5) {
+            var toastHTML = '<span>The selected file exceeds the 5 MB size limit.</span>';
+            var toastColor = "red";       
+            M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+            $('#updatePoiBody').snow();
+            $('#updatePoiButtons').show();
+            $('#updatePoiInprogress').hide();
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var picFile = reader.result;
+            google.script.run.withSuccessHandler(successUpdatePoi).addPoi(incidentLog, title, latitude, longitude, icon, notes, reportedUser, picFile, existingRow, existingId);
+        }
+        reader.readAsDataURL(file);
+    } else {
+        google.script.run.withSuccessHandler(successUpdatePoi).addPoi(incidentLog, title, latitude, longitude, icon, notes, reportedUser, "", existingRow, existingId);
+    }
+}
+
+function successUpdatePoi(e) {
+    resetUpdatePoiCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>'+e[1]+ ' updated.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Unable to update POI. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+    loadPoiList();
+}
+
+function openUpdatePoiCard() {
+    resetUpdatePoiCard();
+    resetAddPoiCard();
+    $('#updatePoiCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#updatePoiCard").offset().top
+    }, 2000);
+}
+
+function resetUpdatePoiCard() {
+    $('#updatePoiCard').hide();
+    $('#updatePoiBody').show();
+    $('#updatePoiButtons').show();
+    $('#updatePoiInprogress').hide();
+    $('#updatePhotoDisplay').hide();
+    $('#updatePhotoBox').hide();
+    $('#updatePoiForm')[0].reset();
+    $('#updatePoiIcon option').prop('selected', false);
+    $('select').formSelect();
+    updatePoiButton();
+
+    
+}
+
+function updatePoiButton() {
+    var title = $("#updatePoiTitle").val();
+    var latitude = $("#updatePoiLatitude").val();
+    var longitude = $("#updatePoiLongitude").val();
+    if (title == "" || title == null || title == undefined || latitude == "" || latitude == null || latitude == undefined || longitude == "" || longitude == null || longitude == undefined) {
+        $("#updatePoiSubmitButton").addClass("disabled");
+    } else {
+        $("#updatePoiSubmitButton").removeClass("disabled");
+    }
+    M.updateTextFields();
+}
+//Load Disable Button If Empty
+$(document).ready(function() {
+        $('#updatePoiForm').change(function() {
+        updatePoiButton();
+    });
+});
+
+    $('#updatePoiLatitude').change(function() {
+        var updatePoiLatitude = $("#updatePoiLatitude").val();
+        updatePoiLatitude = Number(updatePoiLatitude).toFixed(5);
+        $("#updatePoiLatitude").val(updatePoiLatitude);
+    });
+    $('#updatePoiLongitude').change(function() {
+        var updatePoiLongitude = $("#updatePoiLongitude").val();
+        updatePoiLongitude = Number(updatePoiLongitude).toFixed(5);
+        $("#updatePoiLongitude").val(updatePoiLongitude);
+    });
+
+////////////////////////////////////////////
+//Dashboard
+////////////////////////
+
+function loadPoiList() {
+    $('#dashboardTable').hide();
+    $('#dashboardPreloader').show();
+    $('#dashboard_data').empty();
+    $('#dashboard_data').html("<tr><td>Loading...</td></tr>");
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(createDashboard).getPoiList(incidentLog);
+}
+
+function createDashboard(e) {
+    var poiList;
+    if (e === "Undefined" || e == null) {
+        poiList = "";
+    } else {
+        var poiList = e
+    }
+    $('#dashboard_data').empty();
+    var dashboardData = '';
+    for (var i = 0; i < poiList.length; i++) {
+        dashboardData += '<tr><td><img src="' + poiList[i][2] + '" width="32"></td><td>' + poiList[i][3] + '</td><td>' + poiList[i][4] + '</td><td>' + poiList[i][5] + '</td><td>' + poiList[i][6] + '</td><td>';
+        if (poiList[i][7] === "" || poiList[i][7] === null) {
+            dashboardData += 'No Photo';
+        } else {
+            dashboardData += '<a href="' + poiList[i][7] + '" target="_blank">View</a>';
+        }
+        dashboardData += '</td><td>' + poiList[i][8] + '</td><td>' + poiList[i][9] + '</td><td>' + poiList[i][10] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="loadUpdatePoiCard(\'' + poiList[i][0] + '\' );">Update</a></td><td class ="center-align"><a href="#removePoiModal" class="waves-effect waves-teal btn-flat modal-trigger"  onclick="loadRemovePoiModal(\'' + poiList[i][0] + '\' );">Remove</a></td></tr>';
+        //dashboardGetMap(poiList[i][1],startDate);
+    }
+    if (dashboardData == "") {$('#dashboardNoData').show();}
+else{$('#dashboard_data').html(dashboardData);
+ $('#dashboardTable').show();
+}
+
+    $('#dashboard_timestamp').html("<em>As of " + Date() + "</em>");
+    //loadMemberCheckOutMenu(poiList);
+    //loadTeamList();
+    $('#dashboardPreloader').hide();
+
+}
+//Auto Refresh
+$(document).ready(function() {
+    autoRefreshDashboard();
+});
+var autoRefresh;
+
+function autoRefreshDashboard() {
+    if (document.getElementById('autoRefresh').checked) {
+        autoRefresh = setInterval(loadPoiList, 60000);
+    } else {
+        clearInterval(autoRefreshId);
+    }
+}
+//Load RSL On Incident Selection
+$(document).ready(function() {
+    $('#incident').change(function() {
+        $('#GPM').hide();
+        loadPoiList();
+        $('#GPM').show();
+    });
+});
+$(document).ready(function() {
+    $('.fixed-action-btn').floatingActionButton();
+});
+$(document).ready(function() {
+    $('.modal').modal();
+});
+// geolocate functions
+var addfindMeButton = $('#addCurrentPos');
+var updatefindMeButton = $('#updateCurrentPos');
+
+// Check if the browser has support for the Geolocation API
+if (!navigator.geolocation) {
+    findMeButton.addClass("disabled");   
+    var toastHTML = '<span>Unable to access the Geolocation support on your browser.</span>';
+    var toastColor = "red";       
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+} else {
+    addfindMeButton.on('click', function(e) {
+        e.preventDefault();
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // Get the coordinates of the current possition.
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            lat= Number(lat).toFixed(5);
+            lng= Number(lng).toFixed(5);
+            $("#addPoiLatitude").val(lat);
+            $("#addPoiLongitude").val(lng);
+        });
+    });
+        updatefindMeButton.on('click', function(e) {
+        e.preventDefault();
+        navigator.geolocation.getCurrentPosition(function(position) {
+            // Get the coordinates of the current possition.
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            lat= Number(lat).toFixed(5);
+            lng= Number(lng).toFixed(5);
+            $("#updatePoiLatitude").val(lat);
+            $("#updatePoiLongitude").val(lng);
+        });
+    });
+}
+</script>
