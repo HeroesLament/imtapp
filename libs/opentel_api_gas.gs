@@ -8,7 +8,18 @@ var OpenTelemetryGASExporter = {
         return {
             name: name,
             startTime: new Date().toISOString(),
-            endTime: null
+            endTime: null,
+            events: [], // You can initialize an events array to store the events.
+            setAttribute: function(key, value) {
+                this[key] = value;
+            },
+            addEvent: function(eventName, eventAttributes) {
+                this.events.push({
+                    name: eventName,
+                    attributes: eventAttributes,
+                    timestamp: new Date().toISOString()
+                });
+            }
         };
     },
 
@@ -20,6 +31,9 @@ var OpenTelemetryGASExporter = {
         var payload = {
             spans: [span]
         };
+
+        // Log the payload to the console for inspection
+        console.log('Sending payload: ' + JSON.stringify(payload));
 
         var options = {
             method: 'POST',
