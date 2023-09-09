@@ -1,6 +1,8 @@
 var OpenTelemetryGASExporter = {
+    ENDPOINT: 'https://ingest.us.signoz.cloud:443',
 
-    ENDPOINT: 'ingest.us.signoz.cloud:443',
+    // Your ingestion key
+    INGESTION_KEY: 'd3ac4f5e-9515-4403-a224-d32655834c7a',
 
     createSpan: function(name) {
         return {
@@ -22,6 +24,9 @@ var OpenTelemetryGASExporter = {
         var options = {
             method: 'POST',
             contentType: 'application/json',
+            headers: {
+                "signoz-access-token": this.INGESTION_KEY
+            },
             payload: JSON.stringify(payload)
         };
 
