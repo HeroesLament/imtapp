@@ -28,6 +28,7 @@ use-existing-config:
 		if [ "$$scriptId" != "null" ]; then \
 			echo "Using ScriptID $$scriptId for $$dir from $(CONFIG_FILE)"; \
 			echo "{ \"scriptId\": \"$$scriptId\", \"rootDir\": \"$(PWD)/$(SRC_DIR)/$$dir\" }" > $(SRC_DIR)/$$dir/.clasp.json; \
+			(cd $(SRC_DIR)/$$dir && clasp status); \
 		fi; \
 	done
 
