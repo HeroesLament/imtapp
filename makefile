@@ -6,10 +6,24 @@ CONFIG_FILE = .imtapp.json
 setup-dev:
 	@echo "Setting up development environment..."
 	
+	# Check if the configuration file exists
 	@if [ -f "$(CONFIG_FILE)" ]; then \
 		echo "Configuration file $(CONFIG_FILE) found. Using it for setting up."; \
 	else \
 		echo "{" > $(CONFIG_FILE); \
+		for dir in $(shell ls $(SRC_DIR)); do \
+			read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
+			if [ "$$scriptId" != "ignore" ]; then \
+				echo "Linking $$dir with ScriptID: $$scriptId"; \
+				echo "{ \"scriptId\": \"$$scriptId\", \"rootDir\": \"$(PWD)/$(SRC_DIR)/$$dir\" }" > $(SRC_DIR)/$$dir/.clasp.json; \
+				echo "\"$$dir\": \"$$scriptId\"," >> $(CONFIG_FILE); \
+			else \
+				echo "Ignoring $$dir..."; \
+				continue; \
+			fi; \
+		done; \
+		sed -i '$$s/,$$//' $(CONFIG_FILE);  # Remove trailing comma from the last entry
+		echo "}" >> $(CONFIG_FILE); \
 	fi
 	
 	@for dir in $(shell ls $(SRC_DIR)); do \
@@ -17,27 +31,10 @@ setup-dev:
 			scriptId=$$(jq -r ".$$dir" $(CONFIG_FILE)); \
 			if [ "$$scriptId" != "null" ]; then \
 				echo "Using ScriptID $$scriptId for $$dir from $(CONFIG_FILE)"; \
-			else \
-				read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
 			fi; \
-		else \
-			read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
-		fi; \
-		if [ "$$scriptId" != "ignore" ]; then \
-			echo "Linking $$dir with ScriptID: $$scriptId"; \
-			echo "{ \"scriptId\": \"$$scriptId\", \"rootDir\": \"$(PWD)/$(SRC_DIR)/$$dir\" }" > $(SRC_DIR)/$$dir/.clasp.json; \
-			echo "\"$$dir\": \"$$scriptId\"," >> $(CONFIG_FILE); \
-		else \
-			echo "Ignoring $$dir..."; \
-			continue; \
 		fi; \
 		echo "Checking clasp status for $$dir..."; \
 		(cd $(SRC_DIR)/$$dir && clasp status); \
 	done
-	
-	@if [ ! -f "$(CONFIG_FILE)" ]; then \
-		sed -i '$$s/,$$//' $(CONFIG_FILE);  # Remove trailing comma from the last entry
-		echo "}" >> $(CONFIG_FILE); \
-	fi
 
 .PHONY: setup-dev
