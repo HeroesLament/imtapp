@@ -3,3 +3,4 @@
 *ppsscript.json
 /src/IncidentManagement/.clasp/
 /src/SystemSettings/
+/src/IncidentManagement/node_modules/
