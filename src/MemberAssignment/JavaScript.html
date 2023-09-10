@@ -1,0 +1,843 @@
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+<script>
+ $(document).ready(function() {
+    $('.datepicker').datepicker();
+});
+$(document).ready(function() {
+    $('.timepicker_alt').timepicker({
+        timeFormat: 'HH:mm',
+        interval: 15,
+        minTime: '00',
+        maxTime: '23',
+        dynamic: false,
+        dropdown: true,
+        scrollbar: true,
+        change: function(time) {
+            M.updateTextFields();
+        }
+    });
+});
+///////////////////////
+//SELECT INCIDENT
+///////////////////////
+// The code in this function runs when the page is loaded.
+$(document).ready(function() {
+    openSelectIncidentCard();
+});
+
+function loadSelectIncidentMenu(incidents) {
+    $('#incident').empty();
+    var option = '';
+    for (var i = 0; i < incidents.length; i++) {
+        if (incidents.length > 1 && i === 0) {
+            option += '<option value="" disabled selected>Select Incident...</option>';
+        }
+        if (incidents.length > 1) {
+            option += '<option value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+        if (incidents.length == 1) {
+            option += '<option  value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+    }
+    $('#selectIncidentInprogress').hide();
+    //If there is no active  incidents
+    if (option == "") {
+        option += '<option value="" disabled selected>No Open Incidents</option>';
+        $('#selectIncidentMessage').html('There are no active incidents the system....Don\'t worry somone will get lost soon...<a class="waves-effect waves-teal btn-flat" onclick="openSelectIncidentCard()">Try Again</a>');
+        $('#selectIncidentMenu').hide();
+        $('#selectIncidentMessage').show();
+        return
+    }
+    $('#incident').append(option);
+    //if there is only one incident load the data
+    if (incidents.length == 1) {
+        $('#selectIncidentMessage').html("There is only one incident active in the system... going out on a limb here and guessing you want that one...");
+        $('#selectIncidentMessage').show();
+        setTimeout(loadIncidentSelection(), 2000);
+        return
+    }
+    //show selcect menu
+    $('#selectIncidentMenu').show();
+    //Materilize Initation
+    $('select').formSelect();
+    var isVisible = $('#MAM').is(':visible');
+    if (isVisible === true) {
+        $('#selectIncidentCardButton').show();
+    }
+}
+
+function closeSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentCardButton').show();
+    $('#selectIncidentCard').hide();
+}
+
+function openSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentMessage').empty();
+    $('#selectIncidentMenu').hide();
+    $('#selectIncidentCardButton').hide();
+    $('#selectIncidentCard').show();
+    $('#selectIncidentInprogress').show();
+    google.script.run.withSuccessHandler(loadSelectIncidentMenu).getOpenIncidents();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#selectIncidentCard").offset().top
+    }, 2000);
+}
+//incidet select
+function loadIncidentSelection() {
+    closeSelectIncidentCard();
+    $('#MAM').hide();
+    loadIncidentMemberList();
+    $('#MAM').show();
+    $('#navbar').show();
+    $('#fab').show();
+    var incidentName = $('#incident option:selected').text();
+    $('#mobileIncidentNameText').text(incidentName);
+    $('#navIncidentNameText').text(incidentName);
+}
+//Load RSL On Incident Selection
+$(document).ready(function() {
+    $('#incident').change(function() {
+        loadIncidentSelection();
+    });
+});
+/////////////////////////
+// STANDBY CARD FUNCTIONS
+//////////////////////////
+function standbyMember() {
+    $('#standbyCardBody').hide();
+    $('#standbyCardButtons').hide();
+    $('#standbyInprogress').show();
+    var memberName = $("#standbyMemberName").val();
+    var incidentLog = $("#incident").val();
+    var date = $("#standbyDate").val();
+    var time = $("#standbyTime").val();
+    var notes = $("#standbyNotes").val();
+    google.script.run.withSuccessHandler(standbyMemberSuccess).memberStandby(incidentLog, memberName, time, date, notes);
+}
+
+function standbyMemberSuccess(e) {
+    resetStandbyCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>'+e[1] + ' added to standby list.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Somthing went wrong while trying to place member on the standby list. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+    loadIncidentMemberList();
+}
+
+function openStandbyCard() {
+    resetStandbyCard();
+    $('#standbyCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#standbyCard").offset().top
+    }, 2000);
+}
+
+function resetStandbyCard() {
+    $('#standbyCard').hide();
+    $('#standbyForm')[0].reset();
+    $('#standbyCardBody').show();
+    $('#standbyCardButtons').show();
+    $('#standbyInprogress').hide();
+    updateStandbyButton();
+}
+
+function updateStandbyButton() {
+    var memberName = $("#standbyMemberName").val();
+    if (memberName == "" || memberName == null || memberName == undefined) {
+        $("#standbyMemberButton").addClass("disabled")
+    } else {
+        $("#standbyMemberButton").removeClass("disabled")
+    };
+    M.updateTextFields();
+}
+//REMOVE STANDBY
+function removeMemberStandby(memberName) {
+    var incidentLog = $("#incident").val();
+    $('#dashboardBody').hide();
+    google.script.run.withSuccessHandler(standbyRemoveSuccess).standbyRemove(incidentLog, memberName);
+}
+//CREMOVE STANDBY SUCCESS HANDELER
+function standbyRemoveSuccess(e) {
+    $('#dashboardBody').show();
+
+   if (e[0] === true) {
+        var toastHTML = '<span>'+e[1] + ' removed from standby list.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Somthing went wrong trying to remove member from the standby list. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+    loadIncidentMemberList();
+}
+//Load Checking  Time
+//Load Disable Button If Empty
+$(document).ready(function() {
+    $('#standbyMemberName').change(function() {
+        updateStandbyButton();
+    });
+});
+/////////////////////////
+// CHECKIN CARD FUNCTIONS
+//////////////////////////
+//Runs on load of page
+$(document).ready(function() {
+    google.script.run.withSuccessHandler(createCheckinMemberMenu).createVolRoster();
+});
+//Create The Member Checkin AutoCompelte
+//Also creates the one for standby
+function createCheckinMemberMenu(e) {
+    var members = new Array();
+    for (var i = 0; i < e.length; i++) {
+        members[e[i]] = null;
+    }
+    $(function() {
+        $('#checkinMemberName').autocomplete({
+            data: members
+        });
+        $('#standbyMemberName').autocomplete({
+            data: members
+        });
+    });
+}
+//CHECKIN CARD SEND FORM TO BACKEND
+function checkinMember() {
+    $('#checkinCardBody').hide();
+    $('#checkinCardButtons').hide();
+    $('#checkinInprogress').show();
+    var memberName = $("#checkinMemberName").val();
+    var incidentLog = $("#incident").val();
+    var time = $("#checkinTime").val();
+    var date = $("#checkinDate").val();
+    google.script.run.withSuccessHandler(checkinMemberSuccess).memberCheckIn(incidentLog, memberName, time, date);
+}
+
+function checkinMemberSuccess(e) {
+    resetCheckinCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>'+e[1] + ' checked into incident.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Somthing went wrong while attempting to the check the member. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});        
+    loadIncidentMemberList();
+}
+
+function openCheckinCard(memberName) {
+    resetCheckinCard();
+    $('#checkinCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#checkinCard").offset().top
+    }, 2000);
+    if (memberName != undefined) {
+        $("#checkinMemberName").val(memberName);
+        updateCheckinButton();
+    }
+}
+
+function resetCheckinCard() {
+    $('#checkinCard').hide();
+    $('#checkinForm')[0].reset();
+    $('#checkinCardBody').show();
+    $('#checkinCardButtons').show();
+    $('#checkinInprogress').hide();
+    updateCheckinButton();
+}
+
+function updateCheckinButton() {
+    var memberName = $("#checkinMemberName").val();
+    if (memberName == "" || memberName == null || memberName == undefined) {
+        $("#checkinMemberButton").addClass("disabled")
+    } else {
+        $("#checkinMemberButton").removeClass("disabled")
+    };
+    M.updateTextFields();
+}
+//Load Checking  Time
+//Load Disable Button If Empty
+$(document).ready(function() {
+    $('#checkinForm').change(function() {
+        updateCheckinButton();
+    });
+});
+/////////////////////////////////
+//CHECKOUT CARD FUNCTIONS
+/////////////////////////////////
+//CHECKOUT UI FUNCTIONS
+//////////////////////
+function createCheckoutMemberMenu(e) {
+    $("#checkoutMemberButton").addClass("disabled")
+    e.sort();
+    $('#checkoutCardMemberName').empty();
+    var option = '';
+    for (var i = 0; i < e.length; i++) {
+        if (e.length > 0 && i === 0) option += '<option value="" disabled>Select Member</option>';
+        option += '<option value="' + e[i][0].toString() + '">' + e[i][0].toString() + '</option>';
+    }
+    if (option == "") {
+        option += '<option value="" disabled selected>No Currently Checked-In Members</option>';
+        $("#checkoutCardMemberButton").addClass("disabled");
+    }
+    $('#checkoutCardMemberName').append(option);
+    //Materilize Initation
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+}
+//CHECKOUT CARD SEND FORM TO BACKEND
+function checkoutMemberCard() {
+    var memberName = $("#checkoutCardMemberName").val();
+    var incidentLog = $("#incident").val();
+    var time = $("#checkoutCardTime").val();
+    var date = $("#checkoutCardDate").val();
+    $('#checkoutCardBody').hide();
+    $('#checkoutCardButtons').hide();
+    $('#checkoutInprogress').show();
+    google.script.run.withSuccessHandler(checkoutMemberSuccess).cardCheckOut(incidentLog, memberName, time, date);
+}
+//CHECKOUT MODAL SEND FORM TO BACKEND
+function checkoutMemberModal() {
+    var incidentLog = $("#incident").val();
+    var memberName = $("#checkoutModalMemberName").val();
+    var time = $("#checkoutModalTime").val();
+    var date = $("#checkoutModalDate").val();
+    google.script.run.withSuccessHandler(checkoutMemberSuccess).modalCheckOut(incidentLog, memberName, time, date);
+    $('#checkoutModalForm')[0].reset();
+}
+//CHECKOUT BACKEND SUCCESS HANDELER
+function checkoutMemberSuccess(e) {
+    resetCheckoutCard();
+        if (e[0] === true) {
+        var toastHTML = '<span>' + e[1] + ' Checked out of incident.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Somthing went wrong while attempting to the check-out the member. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});  
+    loadIncidentMemberList();
+}
+
+function openCheckoutCard() {
+    resetCheckoutCard();
+    $('#checkoutCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#checkoutCard").offset().top
+    }, 2000);
+}
+
+function resetCheckoutCard() {
+    $('#checkoutCard').hide();
+    $('#checkoutInprogress').hide();
+    $('#checkoutCardBody').show();
+    $('#checkoutCardButtons').show();
+    $('#checkoutCardForm')[0].reset();
+    $('#checkoutCardMemberName option').prop('selected', false);
+    $('select').formSelect();
+    updateCheckoutButton();
+}
+
+
+//SELECT ALL MEMBERS BUTTON  
+$('#checkoutSelectAllButton').click(function() {
+    $('#checkoutCardMemberName option').prop('selected', true);
+    $('select').formSelect();
+    updateCheckoutButton();
+    M.updateTextFields();
+});
+//Load Checkout Time
+//ENABLE/DISABLE CHECKOUT BUTTON
+function updateCheckoutButton() {
+    var memberName = $("#checkoutCardMemberName").val();
+    if (memberName != "") {
+        $("#checkoutMemberButton").removeClass("disabled")
+    } else {
+        $("#checkoutMemberButton").addClass("disabled")
+    };
+    M.updateTextFields();
+}
+//RECHECK BUTTON & TIME STATUS ON CHANGE OF MEMBER NAME
+$(document).ready(function() {
+    $('#checkoutCardMemberName').change(function() {
+        if ($('#checkoutCardMemberName').val() != "") {
+            updateCheckoutButton();
+            //  var time = getCurrentTime().toString();
+            // $("#checkoutCardTime").val(time);
+            $('.timepicker').timepicker({
+                autoClose: true,
+                twelveHour: false,
+                defaultTime: "now"
+            });
+            M.updateTextFields();
+        }
+    });
+});
+//CHECKOUT Modal 
+function loadCheckoutModal(e) {
+    $("#checkoutModalMemberNameText").text(e);
+    $("#checkoutModalMemberName").val(e);
+    M.updateTextFields();
+}
+//////////////////////////
+//UPDATE MEMBER FUNCTIONS
+/////////////////////////
+//////////////////////////////////
+//UPDATE CARD UI FUNCTIONS
+/////////////////////////////////
+$(document).ready(function() {
+    loadIMTPositions();
+    staffPositions = [];
+});
+
+function loadIMTPositions(incidentLog) {
+    google.script.run.withSuccessHandler(createIMTPositionMenu).getIMTPositions();
+}
+
+function createIMTPositionMenu(e) {
+console.log(e)
+    $('#updateMemberPosition').empty();
+    var option = '<option value="" selected>No Position Assigned</option>';
+    for (var i = 0; i < e.length; i++) {
+    console.log(e[i][0].toString())
+    staffPositions.push(e[i][0].toString());
+        option += '<option value="' + e[i][0].toString() + '">' + e[i][0].toString() + ' ('+e[i][1]+')</option>';
+    }
+    $('#updateMemberPosition').append(option);
+    //Materilize Initation
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+}
+
+
+
+function createUpdateMemberMenu(e) {
+    $("#updateMemberButton").addClass("disabled")
+    $('#updateMemberAssignments').hide();
+    e.sort();
+    $('#updateMemberName').empty();
+    var option = '';
+    for (var i = 0; i < e.length; i++) {
+        if (e.length > 0 && i === 0) option += '<option selected value="" >Select Member</option>';
+        option += '<option value="' + e[i][0].toString() + '">' + e[i][0].toString() + '</option>';
+    }
+    if (option == "") {
+        option += '<option value="" disabled selected>No Currently Checked-In Members</option>';
+        $("#updateMemberButton").addClass("disabled");
+    }
+    $('#updateMemberName').append(option);
+    //Materilize Initation
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+}
+//Load Assignment Details On Member Selection
+$(document).ready(function() {
+    $('#updateMemberName').change(function() {
+        if ($('#updateMemberName').val() != "") {
+            createUpdateAssignmentsCard();
+                $('#updateMemberAssignments').hide();
+
+        }
+    });
+});
+//create assignment card
+function createUpdateAssignmentsCard() {
+
+    var incidentLog = $("#incident").val();
+    loadTeamList(incidentLog);
+    loadSpotBeaconList();
+    $('#updateInprogress').show();
+    $('#updateCardButtons').hide();
+
+}
+//Create The Team Assign AutoCompelte
+function loadTeamList(incidentLog) {
+    google.script.run.withSuccessHandler(createUpdateTeamMenu).getTeamList(incidentLog);
+}
+
+function createUpdateTeamMenu(e) {
+    if (e != "" && e != undefined) {
+        ;
+        var teams = new Array();
+        for (var i = 0; i < e.length; i++) {
+            teams[e[i]] = null;
+        }
+        $(function() {
+            $('#updateMemberTeam').autocomplete({
+                data: teams
+            });
+        });
+    }
+}
+
+function loadSpotBeaconList() {
+    $("#updateMemberBeacon").attr('disabled', true);
+    if (document.getElementById('commvanSpotOnly').checked) {
+        var cv = true
+        google.script.run.withSuccessHandler(createUpdateBeaconMenu).getAvailableBeacons(cv);
+    } else {
+        google.script.run.withSuccessHandler(createUpdateBeaconMenu).getAvailableBeacons();
+    }
+}
+
+function createUpdateBeaconMenu(e) {
+    $('#updateMemberBeacon').empty();
+    var option = '';
+    for (var i = 0; i < e.length; i++) {
+        if (i === 0) option += '<option value="">No Assigned Beacon</option>'
+        option += '<option value="' + e[i].toString() + '">' + e[i].toString() + '</option>';
+    }
+    if (option == "") option += '<option value="" disabled selected>No Beacons Available</option>';
+    $('#updateMemberBeacon').append(option);
+    //Materilize Initation
+    $(document).ready(function() {
+        $('select').formSelect();
+    });
+    $("#updateMemberBeacon").attr('disabled', false);
+    var incidentLog = $("#incident").val();
+    var memberName = $("#updateMemberName").val();
+
+    google.script.run.withSuccessHandler(loadPreviousAssignment).getMemberStatus(incidentLog, memberName);
+    
+}
+
+function loadPreviousAssignment(e) {
+//
+//
+//There mioght be a loop on the get mbr status in here...
+console.log(e[1])
+if( staffPositions.indexOf(e[1].toString()) != -1) {
+console.log("IMT")
+  var selectName = "updateMemberPosition";
+        $('#updateMemberPosition option').filter(function() {
+            return ($(this).val() == e[1].toString()); //To select Blue
+        }).prop('selected', true);
+  var instance = M.Tabs.getInstance(document.getElementById('updatePositionTabs')).select('IMTtab');
+        }
+else
+{
+    $('#updateMemberTeam').val(e[1]);
+  var instance = M.Tabs.getInstance(document.getElementById('updatePositionTabs')).select('OPStab');
+
+}
+
+
+    var memberOldBeacon = e[2].toString();
+    var selectName = "updateMemberBeacon";
+    var selectObject = $('select[id*=' + selectName + ']');
+    if (!selectObject.find('option[value="' + memberOldBeacon + '"]').length) {
+        $('#updateMemberBeacon').append('<option value="' + memberOldBeacon + '" selected="selected">' + memberOldBeacon + '</option>');
+    } else {
+        $('#updateMemberBeacon option').filter(function() {
+            return ($(this).text() == memberOldBeacon); //To select Blue
+        }).prop('selected', true);
+    }
+    var teamleader = e[4];  
+    if (teamleader == "true"){
+        document.getElementById('updateTeamLeader').checked = true;
+    }
+    $('select').formSelect();
+    M.updateTextFields();
+    $('#updateInprogress').hide();
+    $('#updateMemberAssignments').show();
+    $('#updateCardBody').show();
+    $('#updateCardButtons').show();
+    updateMemberButton();
+}
+
+function updateMemberButton() {
+    var memberName = $("#updateMemberName").val();
+    var memberAssignments = $("#updateMemberAssignments").is(":visible");
+    if (memberName != "" && memberAssignments == true) {
+        $("#updateMemberButton").removeClass("disabled")
+    } else {
+        $("#updateMemberButton").addClass("disabled")
+    };
+    M.updateTextFields();
+}
+//Load Disable Button If Empty
+$(document).ready(function() {
+    $('#updateCardForm').change(function() {
+        updateMemberButton();
+    });
+});
+//////////////////////////////////
+//UPDATE ASSIGNMENT FUNCTIONS
+/////////////////////////////////
+//UPDATE CARD SEND FORM TO BACKEND
+function updateMember() {
+    var memberName = $("#updateMemberName").val();
+    var memberBeacon = $("#updateMemberBeacon").val();
+    var updateMemberTeam = $("#updateMemberTeam").val();
+    var updateMemberPosition =  $("#updateMemberPosition").val();
+    var incidentLog = $("#incident").val();
+    var time = $("#updateTime").val();
+    var date = $("#updateDate").val();
+    
+    var assignment;
+    
+    if(updateMemberPosition != ""){
+    assignment = updateMemberPosition;
+    }
+    else
+    {
+    assignment = updateMemberTeam;
+    }
+    
+    var leader = false
+    if (document.getElementById('updateTeamLeader').checked) {
+    leader = true;
+    } 
+    $('#updateCardBody').hide();
+    $('#updateCardButtons').hide();
+    $('#updateInprogress').show();
+    google.script.run.withSuccessHandler(updateMemberSuccess).memberUpdate(incidentLog, memberName, assignment, memberBeacon, time, date,leader);
+}
+//BACKEND SUCCESS HANDELER
+function updateMemberSuccess(e) {
+    resetUpdateCard();
+    if (e[0] === true) {
+        var toastHTML = '<span>Updated assignment for ' + e[1] + '.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Somthing went wrong while attempting to the update the assignment. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});       
+    loadIncidentMemberList();
+}
+//OPEN UPDATE CARD
+function openUpdateCard() {
+    resetUpdateCard();
+    $('#updateCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#updateCard").offset().top
+    }, 2000);
+}
+//RESET UPDATE CARD TO INITAL STATUS
+function resetUpdateCard() {
+    $('#updateCard').hide();
+    $('#updateInprogress').hide();
+    $('#updateCardBody').show();
+    $('#updateCardButtons').show();
+    $('#updateMemberAssignments').hide();
+    $('#updateMemberName option').prop('selected', false);
+    $('#updateCardForm')[0].reset();
+    $('select').formSelect();
+    updateMemberButton();
+}
+//CLOSE UPDATE CARD   
+
+//UPDATE BUTTON    
+function loadUpdateCardMember(e) {
+    resetUpdateCard();
+    $('#updateCardBody').hide();
+    $("#updateMemberName").val(e);
+    $('select').formSelect();
+    createUpdateAssignmentsCard();
+    $('#updateCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#updateCard").offset().top
+    }, 2000);
+}
+///////////////////////////////////////
+//CURRENT MEMBER ASSIGNMMENT DASHBOARD 
+///////////////////////////////////////
+function loadIncidentMemberList() {
+    $('#dashboardBody').hide();
+    $('#dashboardPreloader').show();
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(createDashboard).getMembersAssignmentList(incidentLog);
+}
+
+function createDashboard(e) {
+    var statusList = [];
+    var standbyList = [];
+    if (e != undefined || e != null) {
+        for (var i = 0; i < e.length; i++) {
+            if (e[i][4] == "") {
+                standbyList.push(e[i]);
+            } else {
+                statusList.push(e[i]);
+            }
+        }
+    }
+    statusList = statusList.sort(dashboardSort);
+    
+
+    function dashboardSort (a, b) {
+    var aTeam = a[1],
+        bTeam = b[1],
+        aName = a[0],
+        bName = b[0],
+        aLeader = a[0],
+        bLeader = b[0];       
+    if( aTeam != bTeam )
+      return aTeam > bTeam ? 1 : -1;
+
+else
+return aName > bName ? 1 : -1;}
+    
+    
+    var incidentLog = $("#incident").val();
+    $('#dashboard_unassigned_data').empty();
+    $('#dashboard_team_data').empty();
+    $('#dashboard_staff_data').empty();
+    $('#dashboard_standby_data').empty();
+    var dashboardUnassignedData = '';
+    var dashboardTeamData = '';
+    var dashboardStaffData = '';
+    var dashboardStandbyData = "";
+    for (var i = 0; i < statusList.length; i++) {
+        var rowTag = statusList[i][2].toString().replace(/\s+/g, '_');
+        var teamAssignment = statusList[i][1];
+        var staffPosition = false;
+        for (var ii = 0; ii < staffPositions.length; ii++) {
+            if (teamAssignment == staffPositions[ii]) {
+                staffPosition = true;
+                break;
+            }
+        }
+        if (staffPosition == true) {
+            dashboardStaffData += '<tr><td id=' + rowTag + 'Team" class ="center-align">' + statusList[i][1].toString() + '</td><td>' + statusList[i][0].toString() + '</td><td id="' + rowTag + 'Beacon" class ="center-align">' + statusList[i][2].toString() + '</td><td>' + statusList[i][3] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="loadUpdateCardMember(\'' + statusList[i][0] + '\' );">Update</a></td><td class ="center-align"><a href="#checkoutMemberModal" class="waves-effect waves-teal btn-flat modal-trigger"  onclick="loadCheckoutModal(\'' + statusList[i][0] + '\' );">Check-Out</a></td></tr>';
+        } else if (statusList[i][1] != "" && statusList[i][1] != undefined) {
+            dashboardTeamData += '<tr><td id=' + rowTag + 'Team" class ="center-align">' + statusList[i][1].toString(); 
+            if (statusList[i][5] == true) {dashboardTeamData +='<span class="new badge light-green" data-badge-caption="Leader"></span>'}
+             dashboardTeamData += '</td><td>' + statusList[i][0].toString() + '</td><td id="' + rowTag + 'Beacon" class ="center-align">' + statusList[i][2].toString() + '</td><td>' + statusList[i][3] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="loadUpdateCardMember(\'' + statusList[i][0] + '\' );">Update</a></td><td class ="center-align"><a href="#checkoutMemberModal" class="waves-effect waves-teal btn-flat modal-trigger"  onclick="loadCheckoutModal(\'' + statusList[i][0] + '\' );">Check-Out</a></td></tr>';
+       } else {
+            dashboardUnassignedData += '<tr><td id=' + rowTag + 'Team" class ="center-align">' + statusList[i][0].toString() + '</td><td id="' + rowTag + 'Beacon" class ="center-align">' + statusList[i][2].toString()+ '</td><td>' + statusList[i][3] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="loadUpdateCardMember(\'' + statusList[i][0] + '\' );">Update</a></td><td class ="center-align"><a href="#checkoutMemberModal" class="waves-effect waves-teal btn-flat modal-trigger"  onclick="loadCheckoutModal(\'' + statusList[i][0] + '\' );">Check-Out</a></td></tr>';
+        }
+        if (statusList[i][2] != "") dashboardGetMap(incidentLog, statusList[i][0], statusList[i][2]);
+    }
+    for (var i = 0; i < standbyList.length; i++) {
+        dashboardStandbyData += '<tr><td id=' + rowTag + 'Name" class ="center-align">' + standbyList[i][0].toString() + '</td><td>' + standbyList[i][3] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="openCheckinCard(\'' + standbyList[i][0] + '\' );">Check-In</a></td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="removeMemberStandby(\'' + standbyList[i][0] + '\' );">Remove</a></td></tr>';
+    }
+    if (dashboardStaffData == "") {
+        $('#dashboardStaffNoData').show();
+        $('#dashboardStaffTable').hide();
+    } else {
+        $('#dashboardStaffNoData').hide();
+        $('#dashboardStaffTable').show();
+        $('#dashboard_staff_data').html(dashboardStaffData);
+    }
+    if (dashboardTeamData == "") {
+        $('#dashboardTeamNoData').show();
+        $('#dashboardTeamTable').hide();
+    } else {
+        $('#dashboardTeamNoData').hide();
+        $('#dashboardTeamTable').show();
+        $('#dashboard_team_data').html(dashboardTeamData);
+    }
+    if (dashboardUnassignedData == "") {
+        $('#dashboardUnassignedNoData').show();
+        $('#dashboardUnassignedTable').hide();
+    } else {
+        $('#dashboardUnassignedNoData').hide();
+        $('#dashboardUnassignedTable').show();
+        $('#dashboard_unassigned_data').html(dashboardUnassignedData);
+    }
+    if (dashboardStandbyData == "") {
+        $('#dashboardStandbyNoData').show();
+        $('#dashboardStandbyTable').hide();
+    } else {
+        $('#dashboardStandbyNoData').hide();
+        $('#dashboardStandbyTable').show();
+        $('#dashboard_standby_data').html(dashboardStandbyData);
+    }
+    $('#dashboard_timestamp').html("<em>As of " + Date() + "</em>");
+    $('#dashboardPreloader').hide();
+    $('#dashboardBody').show();
+    //This should be looked to fix the continuesout reset of the mensu while in use if i can trigger somthing based on thabs?
+    createCheckoutMemberMenu(statusList);
+    createUpdateMemberMenu(statusList);
+    //Show Check In box if Hidden
+    resetCheckinCard();
+    resetStandbyCard();
+    resetCheckoutCard();
+    if (statusList.length > 1) {
+        $('#checkoutSelectAllButton').removeClass("disabled");
+    } else {
+        $('#checkoutSelectAllButton').addClass("disabled");
+    }
+    autoRefreshDashboard();
+}
+
+function dashboardCallback(url) {
+    if (!url) return;
+    var beacon = url[0].toString();
+    var linkTag = beacon.replace(/\s+/g, '_');
+    var beaconTag = "#" + beacon.replace(/\s+/g, '_');
+    var newUrl = url[1].replace("http", "https");
+    $(beaconTag + "Beacon").html('<a id="' + linkTag + 'Link" class="" href="' + newUrl + '">' + url[0] + '</a>');
+    if (new Date(url[2]) > new Date() - 900000) {
+        $(beaconTag + "Link").addClass('green-text !important');
+    }
+    if (new Date(url[2]) <= new Date() - 900000 && new Date(url[2]) > new Date() - 1800000) {
+        $(beaconTag + 'Link').addClass('blue-text !important');
+    }
+    if (new Date(url[2]) <= new Date() - 1800000 && new Date(url[2]) > new Date() - 3600000) {
+        $(beaconTag + 'Link').addClass('orange-text !important');
+    }
+    if (new Date(url[2]) < new Date() - 3600000) {
+        $(beaconTag + 'Link').addClass('red-text !important');
+    }
+}
+$(document).ready(function() {
+    $('.modal').modal();
+});
+
+function dashboardGetMap(logsheet, member, beacon) {
+    google.script.run.withSuccessHandler(dashboardCallback).getMemberSpotData(logsheet, member, beacon);
+}
+///////////////////////////////
+//DASH BOARD AUTO REFRESH CODE
+//////////////////////////////
+var autoRefreshId;
+
+function autoRefreshDashboard() {
+    clearInterval(autoRefreshId);
+    if (document.getElementById('autoRefresh').checked) {
+        autoRefreshId = setInterval(loadIncidentMemberList, 120000);
+    }
+}
+$('.fixed-action-btn').floatingActionButton({
+    toolbarEnabled: true
+});
+///////////////////
+//UTILITY FUNCTIONS
+///////////////////
+//turn JS time into HH:MM for picker
+function getCurrentTime() {
+    var date = new Date();
+    var h = date.getHours();
+    h = addZero(h);
+    var m = date.getMinutes();
+    m = addZero(m);
+
+    function addZero(i) {
+        if (i < 10) {
+            i = "0" + i;
+        }
+        return i;
+    }
+    var time = h + ":" + m;
+    return time;
+}
+
+ $(document).ready(function(){
+    $('.tabs').tabs();
+  });
+</script>
