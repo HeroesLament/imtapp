@@ -17,7 +17,7 @@ setup-dev: dependency-check
 	fi
 
 create-config:
-	@echo -e "$(YELLOW)If the configuration file doesn't exist, create it!"
+	@echo -e "$(YELLOW)If the configuration file doesn't exist, create it!$(NC)"
 	@echo "{" > $(CONFIG_FILE); \
 	for dir in $(shell ls $(SRC_DIR)); do \
 		read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
