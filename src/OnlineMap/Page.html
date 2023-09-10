@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--Import Google Icon Font-->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!--Import materialize.css-->
+  <link type="text/css" rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+  <!--Let browser know website is optimized for mobile-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    #map {
+      height: 800px;
+      /* The height is 400 pixels */
+      width: 100%;
+      /* The width is the width of the web page */
+    }
+  </style>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
+</head>
+
+<body>
+  <nav class="nav-extended">
+    <div class="nav-wrapper red">
+      <a href="#" class="brand-logo">Incident Managment System (IMS)</a>
+      <a href="#" data-target="mobile-demo" class="sidenav-trigger">
+        <i class="material-icons">menu</i>
+      </a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li>
+          <a class="waves-effect waves-light btn blue darken-4" onclick="refreshMap()">Refresh</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <main>
+    <div class="row">
+      <div class="col s12">
+        <h4 class="blue-text text-darken-4">Incident Situation Display Board</h4>
+        <div id="mapPreloader" class="row" style="display:none">
+          <div class="col s12 center-align blue-grey-text darken-1">
+            <div class="preloader-wrapper active">
+              <div class="spinner-layer spinner-red-only">
+                <div class="circle-clipper left">
+                  <div class="circle"></div>
+                </div>
+                <div class="gap-patch">
+                  <div class="circle"></div>
+                </div>
+                <div class="circle-clipper right">
+                  <div class="circle"></div>
+                </div>
+              </div>
+            </div>
+            <p>Loading ... Just need to find one more postion report, I think it was written on the back of a Ward Cove
+              Market pizza plate...
+            </p>
+          </div>
+        </div>
+        <div id="mapBody" style="display:none">
+          <!--The div element for the map -->
+          <div id="map"></div>
+          <!-- 
+     The `defer` attribute causes the callback to execute after the full HTML
+     document has been parsed. For non-blocking uses, avoiding race conditions,
+     and consistent behavior across browsers, consider loading using Promises
+     with https://www.npmjs.com/package/@googlemaps/js-api-loader.
+    -->
+          <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD_0mjKiDIhkOPVoziR5EfLfJiJ8HcUOwc&v=weekly"
+            defer>
+          </script>
+          <ul class="collection">
+            <li id="updateDtg" class="collection-item"></li>
+            <li id="totalSitu" class="collection-item"></li>
+            <li class="collection-item">
+              <span id="totalSpot" ></span> 
+              <span id="lastApiCall" ></span> 
+              <span id="lastApiData" ></span> 
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+<?!= include('JavaScript'); ?>
+
+</html>

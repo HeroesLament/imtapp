@@ -1,0 +1,119 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+  let map;
+  let running;
+  let refreshInterval;
+
+$(document).ready(function() {
+    createMap();
+});
+
+function createMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: {
+            lat: Number(55.4),
+            lng: Number(-131.7)
+        },
+        mapTypeId: 'terrain',
+    });
+    refreshMap() 
+}
+
+function refreshMap() {
+    $('#mapPreloader').show();
+    $('#mapBody').hide();
+    clearInterval(refreshInterval);
+    google.script.run.withSuccessHandler(getSpotDataWrapup).getSpotData();
+    google.script.run.withSuccessHandler(getSituDataWrapup).getSituationData();
+    google.script.run.withSuccessHandler(getSpotStatusWrapup).getSpotScriptStatus();
+    running = 3;
+    document.getElementById("updateDtg").innerHTML = "Situation Display map current as of "+new Date();
+
+}
+
+function getSpotDataWrapup(e) {
+    console.log(e)
+    var eLen = e.length;
+    for (var i = 0; i < eLen; i++) {
+        var lat = Number(e[i][2]);
+        var lng = Number(e[i][3]);
+        new google.maps.Marker({
+            position: {
+                lat: lat,
+                lng: lng
+            },
+            title: e[i][1],
+            label: e[i][17],
+            map: map
+        });
+    }
+     document.getElementById("totalSpot").innerHTML = eLen+" SPOT Beacon Positions are displayed on the Situation Display map.";
+    running--
+    if (running == 0) {
+        $('#mapPreloader').hide();
+        $('#mapBody').show();
+    }
+}
+
+function getSituDataWrapup(e) {
+    console.log(e);
+    var eLen = e.length;
+    for (var i = 0; i < eLen; i++) {
+        var lat = Number(e[i][2]);
+        var lng = Number(e[i][3]);
+        var title = e[i][0] + " " + e[i][1];
+        new google.maps.Marker({
+            position: {
+                lat: lat,
+                lng: lng
+            },
+            title: title,
+            icon: e[i][12],
+            map: map
+        });
+    }
+        document.getElementById("totalSitu").innerHTML = eLen+" Points of Interest are displayed on the Situation Display map.";
+
+    running--
+
+    if (running == 0) {
+        $('#mapPreloader').hide();
+        $('#mapBody').show();
+    }
+}
+
+function getSpotStatusWrapup(e) {
+    console.log(e)
+
+    running--
+    var spotDtg =  new Date(e[0][1]).getTime();
+    var dataDtg =new Date(e[1][1]).getTime(); 
+    var updateDtg =  new Date().getTime();
+    var nextSpotDtg = spotDtg+305000;
+    var nextUpdateDtg = updateDtg+305000;
+    var adjustment = nextSpotDtg-updateDtg;
+    
+    if (nextUpdateDtg-nextSpotDtg > 10000){
+       console.log(" > 10 seconds")
+       console.log(nextUpdateDtg-nextSpotDtg);
+       }
+
+    if (updateDtg-dataDtg > 2760000){
+    refreshInterval = setInterval(refreshMap, (1800000+adjustment));
+    console.log(new Date(updateDtg+1800000+adjustment))
+    }
+    else
+    {    refreshInterval = setInterval(refreshMap, adjustment);
+    console.log(new Date(updateDtg+adjustment))
+}
+
+        document.getElementById("lastApiCall").innerHTML = "SPOT Beacon Postion Data last updated " + e[0][1] + ".";
+    document.getElementById("lastApiData").innerHTML = "Most recent SPOT Beacon postion recieved " + e[1][1] + ".";
+    if (running == 0) {
+        $('#mapPreloader').hide();
+        $('#mapBody').show();
+    }
+}
+</script>
