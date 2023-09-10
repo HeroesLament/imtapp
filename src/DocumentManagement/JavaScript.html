@@ -1,0 +1,352 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+ $(document).ready(function() {
+    openSelectIncidentCard();
+});
+var documentTemplates = [];
+google.script.run.withSuccessHandler(setDocumentTemplates).getTemplateList();
+
+function setDocumentTemplates(e) {
+    documentTemplates = e;
+    $('#addDocumentTemplate').empty();
+    var option = '';
+    for (var i = 0; i < e.length; i++) {
+        if (e.length > 1 && i === 0) {
+            option += '<option value="" disabled selected>Select Template...</option>';
+        }
+        option += '<option value="' + e[i][0].toString() + '">' + e[i][1].toString() + '</option>';
+    }
+    if (option == "") {
+        option += '<option value="" disabled selected>No Templates Available</option>';
+        return;
+    }
+    $('#addDocumentTemplate').append(option);
+    $('select').formSelect();
+}
+
+function openSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentMessage').empty();
+    $('#selectIncidentMenu').hide();
+    $('#selectIncidentCardButton').hide();
+    $('#selectIncidentCard').show();
+    $('#selectIncidentInprogress').show();
+    google.script.run.withSuccessHandler(loadSelectIncidentMenu).getOpenIncidents();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#selectIncidentCard").offset().top
+    }, 2000);
+}
+
+function loadSelectIncidentMenu(incidents) {
+    $('#incident').empty();
+    var option = '';
+    for (var i = 0; i < incidents.length; i++) {
+        if (incidents.length > 1 && i === 0) {
+            option += '<option value="" disabled selected>Select Incident...</option>';
+        }
+        if (incidents.length > 1) {
+            option += '<option value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+        if (incidents.length == 1) {
+            option += '<option  value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+    }
+    $('#selectIncidentInprogress').hide();
+    //If there is no active  incidents
+    if (option == "") {
+        option += '<option value="" disabled selected>No Open Incidents</option>';
+        $('#selectIncidentMessage').html('There are no active incidents the system....Don\'t worry somone will get lost soon...<a class="waves-effect waves-teal btn-flat" onclick="openSelectIncidentCard()">Try Again</a>');
+        $('#selectIncidentMenu').hide();
+        $('#selectIncidentMessage').show();
+        return;
+    }
+    $('#incident').append(option);
+    //if there is only one incident load the data
+    if (incidents.length == 1) {
+        $('#selectIncidentMessage').html("There is only one incident active in the system... going out on a limb here and guessing you want that one...");
+        $('#selectIncidentMessage').show();
+        setTimeout(loadIncidentSelection(), 2000);
+        return;
+    }
+    //show selcect menu
+    $('#selectIncidentMenu').show();
+    //Materilize Initation
+    $('select').formSelect();
+    var isVisible = $('#MAM').is(':visible');
+    if (isVisible === true) {
+        $('#selectIncidentCardButton').show();
+    }
+}
+
+function closeSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentCardButton').show();
+    $('#selectIncidentCard').hide();
+}
+
+function loadIncidentSelection() {
+    closeSelectIncidentCard();
+    $('#MAM').hide();
+    loadDocumentList();
+    $('#MAM').show();
+    $('#navbar').show();
+    $('#fab').show();
+    var incidentName = $('#incident option:selected').text();
+    $('#mobileIncidentNameText').text(incidentName);
+    $('#navIncidentNameText').text(incidentName);
+}
+
+function openAddDocumentModal() {
+    var elem = document.querySelector("#addDocumentModal");
+    var instance = M.Modal.getInstance(elem);
+    $('#addDocumentForm')[0].reset();
+    $('#addDocumentCreateButton').addClass("disabled");
+    $('#addDocumentBody').show();
+    $('#addDocumentVessel').hide();
+    $('#addDocumentPerson').hide();
+    $('#addDocumentButtons').show();
+    $('#addDocumentInprogress').hide();
+    instance.open()
+}
+$(document).ready(function() {
+    $('#addDocumentTemplate').change(function() {
+        var document = $("#addDocumentTemplate").val();
+        if (document != null) {
+            $('#addDocumentCreateButton').removeClass("disabled");
+        }
+    })
+    $('#vessel_name').change(function() {
+        var val = $("#vessel_name").val();
+        if (val == "") {
+            $('#addDocumentCreateButton').addClass("disabled");
+        } else {
+            $('#addDocumentCreateButton').removeClass("disabled");
+        }
+    })
+    $('#last_name').change(function() {
+        var val = $("#last_name").val();
+        var val2 = $("#first_name").val();
+        if (val == "" || val2 == "") {
+            $('#addDocumentCreateButton').addClass("disabled");
+        } else {
+            $('#addDocumentCreateButton').removeClass("disabled");
+        }
+    })
+    $('#first_name').change(function() {
+        var val = $("#last_name").val();
+        var val2 = $("#first_name").val();
+        if (val == "" || val2 == "") {
+            $('#addDocumentCreateButton').addClass("disabled");
+        } else {
+            $('#addDocumentCreateButton').removeClass("disabled");
+        }
+    })
+});
+
+$(document).ready(function() {
+    $('#addDocumentTemplate').change(function() {
+        var document = $("#addDocumentTemplate").val();
+        var documentType;
+        for (var i = 0; i < documentTemplates.length; i++) {
+            if (documentTemplates[i][0] == document) {
+                documentType = documentTemplates[i][2];
+                $("#addDocumentType").val(documentType);
+                break;
+            }
+        }
+        if (documentType == "VESSEL") {
+            $('#addDocumentVessel').show();
+            $('#addDocumentCreateButton').addClass("disabled");
+        } else {
+            $('#addDocumentVessel').hide();
+            $("#vessel_name").val("");
+        }
+        if (documentType == "PERSON") {
+            $('#addDocumentPerson').show();
+            $('#addDocumentCreateButton').addClass("disabled");
+        } else {
+            $('#addDocumentPerson').hide();
+            $("#last_name").val("");
+            $("#first_name").val("");
+        }
+    });
+});
+
+function uploadFile() {
+    $('#uploadFileBody').hide();
+    $('#uploadFileButtons').hide();
+    $('#uploadFileInprogress').show();
+    var incidentLog = $("#incident").val();
+    var files = $('#uploadFile')[0].files;
+    var file = files[0];
+    var fileName = file.name;
+    if (file != "" && file != undefined && file != null) {
+        if (file.size > 1024 * 1024 * 5) {
+            var toastHTML = '<span>The selected file exceeds the 5 MB size limit.</span>';
+            var toastColor = "red";
+            M.toast({
+                html: toastHTML,
+                classes: toastColor,
+                displayLength: '8000'
+            });
+            $('#uploadFileBody').show();
+            $('#uploadFileButtons').show();
+            $('#uploadFileInprogress').hide();
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var docFile = reader.result;
+            google.script.run.withSuccessHandler(uploadFileWrapup).withFailureHandler(uploadFileWrapup).uploadFileToDrive(incidentLog, fileName, docFile);
+        }
+        reader.readAsDataURL(file);
+    }
+}
+function uploadFileWrapup(e) {
+    $('#uploadFileForm')[0].reset();
+    $('#uploadFileBody').show();
+    $('#uploadFileButtons').show();
+    $('#uploadFileInprogress').hide();
+    var elem = document.querySelector("#uploadFileModal");
+    var instance = M.Modal.getInstance(elem);
+    instance.close()
+    if (e[0] === true) {
+        var toastHTML = '<span>Uploaded <a href="' + e[2] + '" target="_blank">' + e[1] + '</a></span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Somthing went wrong. ' + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadDocumentList();
+}
+
+function addDocument() {
+    $('#addDocumentBody').hide();
+    $('#addDocumentVessel').hide();
+    $('#addDocumentPerson').hide();
+    $('#addDocumentButtons').hide();
+    $('#addDocumentInprogress').show();
+    var incidentFolder = $("#incident").val();
+    var templateId = $("#addDocumentTemplate").val();
+    var templateType = $("#addDocumentType").val();
+    var firstName = $("#first_name").val();
+    var lastName = $("#last_name").val();
+    var vesselName = $("#vessel_name").val();
+    google.script.run.withSuccessHandler(addDocumentWrapup).withFailureHandler(addDocumentWrapup).createDocumentFromTemplate(incidentFolder, templateId, templateType, lastName, firstName, vesselName);
+}
+
+function addDocumentWrapup(e) {
+    $('#addDocumentForm')[0].reset();
+    $('#addDocumentBody').show();
+    $('#addDocumentButtons').show();
+    $('#addDocumentInprogress').hide();
+    var elem = document.querySelector("#addDocumentModal");
+    var instance = M.Modal.getInstance(elem);
+    instance.close()
+    if (e[0] === true) {
+        var toastHTML = '<span>Created <a href="' + e[2] + '" target="_blank">' + e[1] + '</a></span>';
+        var toastColor = "light-green-text";
+    } else {
+        var toastHTML = '<span>Somthing went wrong. ' + e[1] + '.</span>';
+        var toastColor = "red";
+    }
+    M.toast({
+        html: toastHTML,
+        classes: toastColor,
+        displayLength: '8000'
+    });
+    loadDocumentList();
+}
+////
+//Add Expense Card Functions
+////
+
+
+
+function loadDocumentList() {
+    $('#dashboardBody').hide();
+    $('#dashboardPreloader').show();
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(createDashboard).getDocumentList(incidentLog);
+}
+
+function createDashboard(e) {
+    var incidentLog = $("#incident").val();
+    var dashboardData = '';
+    for (var i = 0; i < e.length; i++) {
+        var rowTag = (e[i][2].toString());
+        dashboardData += '<tr><td id="Row_' + rowTag + '" class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="window.open(\'' + e[i][3] + '\' );">' + e[i][0] + '</a></td><td class ="center-align">' + e[i][1] + '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat"  onclick="window.open(\'' + e[i][3] + '\' );">Open</a></td></tr>';
+    }
+    if (dashboardData == "") {
+        $('#dashboardData').show();
+    } else {
+        $('#dashboardNoData').hide();
+        $('#dashboardData').html(dashboardData);
+    }
+    $('#dashboardTimestamp').html("<em>As of " + Date() + "</em>");
+    $('#dashboardPreloader').hide();
+    $('#dashboardBody').show();
+}
+//Document Rdy Functions
+$(document).ready(function() {
+    $('#addExpenseForm').change(function() {
+        updateAddExpenseButton();
+    });
+    $('#addExpenseAmount').change(function() {
+        updateAddExpenseButton();
+        var expenseAmount = $("#addExpenseAmount").val();
+        expenseAmount = Number(expenseAmount).toFixed(2);
+        $("#addExpenseAmount").val(expenseAmount);
+    });
+    $('#addPurchasePaymentMethod').change(function() {
+        updateAddExpenseButton();
+        $('input:radio[name="purchaserReimbursement"]').each(function() {
+            $(this).prop("checked", false);
+        });
+    });
+});
+$(document).ready(function() {
+    $('#addDonationForm').change(function() {
+        updateAddDonationButton();
+    });
+    $('#addDonationValue').change(function() {
+        updateAddExpenseButton();
+        var expenseAmount = $("#addDonationValue").val();
+        expenseAmount = Number(expenseAmount).toFixed(2);
+        $("#addDonationValue").val(expenseAmount);
+    });
+});
+/////////////////////////
+// CHECKIN CARD FUNCTIONS
+//////////////////////////
+//Runs on load of page
+//Create The Member Checkin AutoCompelte
+//Also creates the one for standby
+
+$(document).ready(function() {
+    $('#incident').change(function() {
+        loadIncidentSelection();
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('.datepicker');
+    var options = {
+        defaultDate: new Date(),
+        setDefaultDate: true
+    };
+    var instances = M.Datepicker.init(elems, options);
+});
+$(document).ready(function() {
+    $('.modal').modal();
+});
+$(document).ready(function() {
+    $('.fixed-action-btn').floatingActionButton();
+});
+</script>

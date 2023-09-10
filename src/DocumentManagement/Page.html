@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_blank">
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body>
+    <div id="fab" class="fixed-action-btn toolbar hide-on-large-only" style="display:none">
+        <a class="btn-floating btn-large red" onclick="openAddDocumentCard()"><i class="material-icons">add</i>
+            <i class="large material-icons">menu</i>
+        </a>
+
+    </div>
+    <nav id="navbar" class="hide-on-med-and-down" style="display:none">
+        <div class="navbar-fixed hide-on-med-and-down">
+            <nav>
+                <div class="nav-wrapper red">
+                    <a class="brand-logo">Incident: <span id="navIncidentNameText" onclick="openSelectIncidentCard()"></span></a>
+                    <ul class="right hide-on-med-and-down">
+                        <li><a onclick="openAddDocumentModal()">Add Document</a></li>
+                        <li><a class="modal-trigger" href="#uploadFileModal">Upload File</a></li>
+                        <li><a class="waves-effect waves-light btn blue darken-4" onclick="loadDocumentList();">Refresh</a></li>
+
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </nav>
+    <main>
+        <div class="row">
+            <div class="col s12 l6 offset-l3">
+                <div id="selectIncidentCard" class="card white">
+                    <div class="card-content blue-grey-text darken-1">
+                        <span class="card-title">Select Incident</span>
+                        <div id="selectIncidentMenu" style="display:none">
+                            <select id="incident">
+                                <option value="" disabled selected>Loading...</option>
+                            </select>
+                        </div>
+                        <div class="row center-align" id="selectIncidentInprogress" style="display:none">
+                            <div class="col s12">
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>Building Incident Menu...Comm Van Standing By KVRS Direct</div>
+                            </div>
+                        </div>
+                        <div id="selectIncidentMessage" style="display:none">
+                        </div>
+                    </div>
+                    <div id="selectIncidentCardButton" class="card-action" style="display:none">
+                        <a id="selectIncidentCloseButton" class="waves-effect waves-light btn green" onclick="closeSelectIncidentCard();">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="MAM" style="display:none">
+            <div class="row">
+                <div class="col s12">
+                    <h4 class="center-align hide-on-large-only red-text">Incident: </h4>
+                    <h4 class="center-align hide-on-large-only red-text" id="mobileIncidentNameText"></h4>
+                </div>
+            </div>
+            <div class="row">
+                <div id="addExpenseCard" class="col s12 l6" style="display:none">
+                    <div class="card white">
+                        <div class="card-content green-text">
+                            <span class="card-title">Add Document</span>
+                            <div id="addExpenseCardBody">
+                                <form id="addExpenseForm">
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">date_range</i>
+                                        <label for="addExpenseDate">Purchase Date</label><input id="addExpenseDate" type="text" class="datepicker" placeholder="Today">
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">store</i>
+                                        <input type="text" id="addVendorName" placeholder="Name of Company Purchase Was Made From">
+                                        <label for="addVendorName">Vendor Name</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">attach_money</i>
+                                        <input type="number" min="0.00" step="0.01" id="addExpenseAmount" placeholder="12.87">
+                                        <label for="addExpenseAmount">Expense Amount</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">shopping_cart</i>
+                                        <input type="text" id="addExpenseDescription" placeholder="Brief Description (e.g AAA Batteries For SPOTs)">
+                                        <label for="addExpenseDescription">Expense Description</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">person</i>
+                                        <input type="text" id="addPurchaserName" class="autocomplete" placeholder="Name of KVRS Member Making Purchase">
+                                        <label for="addPurchaserName">Purchaser</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">payment</i>
+                                        <select id="addPurchasePaymentMethod">
+                                            <option value="" disabled selected>Choose your option</option>
+                                            <option value="KVRS Credit Card">KVRS Credit Card</option>
+                                            <option value="KVRS Account">KVRS Vendor/Store Account</option>
+                                            <option value="Purchaser">Paid For By Purchaser</option>
+                                        </select>
+                                        <label>Payment Method</label>
+                                    </div>
+                                    <div class="input-field" id="addPurchaserReimbursementSection">
+                                        <p>
+                                            <label>Purchaser Requires Reimbursement</label>
+                                            <label>
+                                                <input name="purchaserReimbursement" type="radio" value="Yes" />
+                                                <span>Yes</span>
+                                            </label>
+                                            <label>
+                                                <input name="purchaserReimbursement" type="radio" value="No" />
+                                                <span>No</span>
+                                            </label>
+                                        </p>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">event_note</i>
+                                        <label for="addNotes">Notes</label><textarea id="addNotes" class="materialize-textarea"></textarea>
+                                    </div>
+                                    <div class="file-field input-field">
+                                        <div id="addDocumentationButton" class="btn">
+                                            <i class="material-icons left">receipt</i>
+                                            <span>Receipt/Invoice</span>
+                                            <input id="addDocumentation" type="file">
+                                        </div>
+                                        <div class="file-path-wrapper">
+                                            <input class="file-path validate" type="text" placeholder="Select File">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="row center-align" id="addExpenseCardInprogress" style="display:none">
+                                <div class="col s12 blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>Sendng this expense report to the big bank of Brett in the cloud ... </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="addExpenseCardButtons" class="card-action">
+                            <a id="addDocumentButton" class="waves-effect waves-light btn purple disabled" onclick="addExpenseReport()">Add Expense</a>
+                            <a id="closeAddExpenseButton" class="waves-effect waves-light btn deep-orange" onclick="resetAddExpenseCard()">Close</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div id="dashboard" class="card">
+                        <div class="card-content">
+                            <span id="dashboardTitle" class="card-title green-text text-darken-4"><span id="dashboardTitleIncident"></span>Incident Documents</span>
+                            <div id="dashboardPreloader" class="row" style="display:none">
+                                <div class="col s12 center-align blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p>Loading ... Greasing The File Cabinet Sildes ...</p>
+                                </div>
+                            </div>
+                            <div id="dashboardBody">
+                                <div id="dashboardNoData" style="display:none">
+                                    <h6 class="center-align red-text">No documents have been crated for the incident ...come on now do you really want more paperwork!</h6>
+                                    <div class="divider"></div>
+                                </div>
+                                <table id="dashboardTable" class="responsive-table center-align highlight">
+                                    <thead>
+                                        <tr>
+                                            <th class="center-align">Title</th>
+                                            <th class="center-align">Last Modified</th>
+                                            <th class="center-align">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardData">
+                                        <tr>
+                                            <td>Loading....totally not finding the circular file for these documents...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="row">
+                                    <div class="col s12">
+                                        <h6 id="dashboardTimestamp" class="right-align"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal Structure -->
+        <div id="uploadFileModal" class="modal">
+            <div class="modal-content">
+                <h4>Upload File</h4>
+                <div id="uploadFileBody">
+                <form id="uploadFileForm">
+                                    <div class="file-field input-field">
+                                        <div id="uploadFileButton" class="btn">
+                                            <i class="material-icons left">insert_drive_file</i>
+                                            <span>File</span>
+                                            <input id="uploadFile" type="file">
+                                        </div>
+                                        <div class="file-path-wrapper">
+                                            <input class="file-path validate" type="text" placeholder="Select File">
+                                        </div>
+                                    </div>
+                </form></div>
+                            <div id="uploadFileInprogress" class="row" style="display:none">
+                                <div class="col s12 center-align blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p>Shooting your file to the KVRS cumulus ...</p>
+                                </div>
+                            </div>
+
+            </div>
+            <div id ="uploadFileButtons" class="modal-footer">
+                <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a class="waves-effect waves-green btn-flat" onclick="uploadFile()">Upload</a>
+            </div>
+        </div>
+                <!-- Modal Structure -->
+       <div id="addDocumentModal" class="modal">
+	<div class="modal-content">
+		<h4>Create Document From Template</h4>
+		<div id="addDocumentBody">
+			<form id="addDocumentForm">
+        <input id="addDocumentType" type="text" style="display:none">
+        <div class ="row">
+				<div class="input-field col s12">
+					<select id="addDocumentTemplate">
+						<option value="" disabled selected>Loading...</option>
+					</select>
+					<label>Select Document</label>
+				</div>
+        </div>
+				<div class= "row" id="addDocumentPerson" style="display:none">
+          					<div class="col s12"><strong>
+Subject Informaton</strong></div>
+
+					<div class="input-field col s6">
+						<input id="last_name" type="text" class="validate">
+						<label for="last_name">Last Name</label>
+					</div>
+          <div class="input-field col s6">
+						<input id="first_name" type="text" class="validate">
+						<label for="first_name">First Name</label>
+					</div>
+				</div>
+				<div class= "row" id="addDocumentVessel" style="display:none">
+          					<div class="col s12"><strong>
+Vessel Informaton</strong></div>
+					<div class="input-field col s12">
+						<input id="vessel_name" type="text" class="validate">
+						<label for="vessel_name">Vessel Name</label>
+					</div>
+				</div>
+		</form>
+	</div>
+	<div id="addDocumentInprogress" class="row" style="display:none">
+		<div class="col s12 center-align blue-grey-text darken-1">
+			<div class="preloader-wrapper active">
+				<div class="spinner-layer spinner-red-only">
+					<div class="circle-clipper left">
+						<div class="circle"></div>
+					</div>
+					<div class="gap-patch">
+						<div class="circle"></div>
+					</div>
+					<div class="circle-clipper right">
+						<div class="circle"></div>
+					</div>
+				</div>
+			</div>
+			<p>Looking to find where the blank forms were left ...</p>
+		</div>
+	</div>
+</div>
+<div id="addDocumentButtons" class="modal-footer"> <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+<a id="addDocumentCreateButton" class="waves-effect waves-green btn-flat disabled" onclick="addDocument()">Create</a> </div>
+</div>
+        <?!= include('JavaScript'); ?>
+    </main>
+</body>
+
+</html>
