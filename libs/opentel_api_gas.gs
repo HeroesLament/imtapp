@@ -1,5 +1,5 @@
 var OpenTelemetryGASExporter = {
-    ENDPOINT: 'https://ingest.us.signoz.cloud:443',
+    ENDPOINT: 'https://ingest.us.signoz.cloud/v1/traces:443',
 
     // Your ingestion key
     INGESTION_KEY: 'd3ac4f5e-9515-4403-a224-d32655834c7a',
@@ -33,13 +33,21 @@ var OpenTelemetryGASExporter = {
         };
 
         // Log the payload to the console for inspection
-        console.log('Sending payload: ' + JSON.stringify(payload));
+        console.log('Sending request with details: ', {
+            payload: JSON.stringify(payload),
+            headers: {
+                "signoz-access-token": this.INGESTION_KEY,
+                "Content-Type": 'application/json'
+            },
+            contentType: 'application/json'
+        });
 
         var options = {
             method: 'POST',
             contentType: 'application/json',
             headers: {
-                "signoz-access-token": this.INGESTION_KEY
+                "signoz-access-token": this.INGESTION_KEY,
+                'muteHttpExceptions': true
             },
             payload: JSON.stringify(payload)
         };
