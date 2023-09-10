@@ -44,11 +44,22 @@ dependency-check:
 	@which jq > /dev/null || (echo "Error: jq is not installed. Please install it using your package manager." && exit 1)
 
 clean:
+	@echo -e "$(RED)Cleaning up project configurations...$(NC)"
 	@if [ -f "$(CONFIG_FILE)" ]; then \
 		echo -e "$(RED)Removing $(CONFIG_FILE)...$(NC)"; \
 		rm $(CONFIG_FILE); \
 	else \
 		echo -e "$(YELLOW)$(CONFIG_FILE) does not exist, nothing to remove.$(NC)"; \
 	fi
+
+	@for dir in $(shell ls $(SRC_DIR)); do \
+		if [ -f "$(SRC_DIR)/$$dir/.clasp.json" ]; then \
+			echo -e "$(RED)Removing $(SRC_DIR)/$$dir/.clasp.json...$(NC)"; \
+			rm $(SRC_DIR)/$$dir/.clasp.json; \
+		else \
+			echo -e "$(YELLOW)$(SRC_DIR)/$$dir/.clasp.json does not exist, nothing to remove.$(NC)"; \
+		fi; \
+	done
+
 
 .PHONY: setup-dev create-config use-existing-config dependency-check clean
