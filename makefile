@@ -2,9 +2,14 @@
 SRC_DIR = src
 CONFIG_FILE = .imtapp.json
 
+# ANSI Color Codes
+RED=\033[0;31m
+GREEN=\033[0;32m
+YELLOW=\033[0;33m
+NC=\033[0m # No Color
+
 setup-dev: dependency-check
 	@echo "Setting up development environment..."
-	# If the configuration file doesn't exist, create it
 	@if [ ! -f "$(CONFIG_FILE)" ]; then \
 		$(MAKE) create-config; \
 	else \
@@ -12,6 +17,7 @@ setup-dev: dependency-check
 	fi
 
 create-config:
+	@echo -e "$(YELLOW)If the configuration file doesn't exist, create it!"
 	@echo "{" > $(CONFIG_FILE); \
 	for dir in $(shell ls $(SRC_DIR)); do \
 		read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
@@ -23,6 +29,7 @@ create-config:
 	echo "}" >> $(CONFIG_FILE)
 
 use-existing-config:
+	@echo -e "$(GREEN)Config exists!$(NC)"
 	@for dir in $(shell ls $(SRC_DIR)); do \
 		scriptId=$$(jq -r ".$$dir" $(CONFIG_FILE)); \
 		if [ "$$scriptId" != "null" ]; then \
