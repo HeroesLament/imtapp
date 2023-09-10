@@ -10,17 +10,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 
-<body onload="initApp()">
+<body>
     <nav class="nav-extended">
         <div class="nav-wrapper red">
-            <a href="#" class="brand-logo">
-                <span id="userName" style="margin-right: 10px;"></span>
-                Incident Managment System (IMS)
-            </a>
+            <a href="#" class="brand-logo">Incident Managment System (IMS)</a>
             <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <li><a class="waves-effect waves-light btn" id="loginButton">Login with Google</a></li>
-                <li><a class="waves-effect waves-light btn blue darken-4" onclick="loadIncidentList();">Refresh</a></li>
+                <li> <a class="waves-effect waves-light btn blue darken-4" onclick="loadIncidentList();">Refresh</a>
+                </li>
                 <li><a href="#newIncidentCard" id="addIncidentButton" class="waves-effect waves-light btn green" onclick="openNewIncidentCard();">New Incident</a></li>
             </ul>
         </div>
@@ -438,28 +435,5 @@
     </main>
 </body>
 <?!= include('JavaScript'); ?>
-
-<script>
-    function initApp() {
-        const hashFragment = window.location.hash.substr(1);
-        const params = new URLSearchParams(hashFragment);
-
-        if (params.has('access_token')) {
-            const accessToken = params.get('access_token');
-            fetchUserProfile(accessToken);
-            }
-        }
-
-
-    document.getElementById('loginButton').addEventListener('click', function() {
-        var clientId = '883760938624-mt2umkvt4v3k109huqkg8rkuhbmu5lpt.apps.googleusercontent.com';
-        var redirectUri = 'http://localhost:8080/oauth2callback.html'; 
-        var scope = 'https://www.googleapis.com/auth/userinfo.email';
-        var authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=' + clientId + '&redirect_uri=' + redirectUri + '&scope=' + scope;
-
-        window.location.href = authUrl;
-        });
-</script>
-
 
 </html>
