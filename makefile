@@ -7,9 +7,7 @@ setup-dev:
 	@echo "Setting up development environment..."
 	
 	# Check if the configuration file exists
-	@if [ -f "$(CONFIG_FILE)" ]; then \
-		echo "Configuration file $(CONFIG_FILE) found. Using it for setting up."; \
-	else \
+	@if [ ! -f "$(CONFIG_FILE)" ]; then \
 		echo "{" > $(CONFIG_FILE); \
 		for dir in $(shell ls $(SRC_DIR)); do \
 			read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
@@ -19,7 +17,6 @@ setup-dev:
 				echo "\"$$dir\": \"$$scriptId\"," >> $(CONFIG_FILE); \
 			else \
 				echo "Ignoring $$dir..."; \
-				continue; \
 			fi; \
 		done; \
 		sed -i '$$s/,$$//' $(CONFIG_FILE);  # Remove trailing comma from the last entry
