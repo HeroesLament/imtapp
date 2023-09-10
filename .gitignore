@@ -6,3 +6,4 @@
 /src/IncidentManagement/node_modules/
 /src/IncidentManagement/package-lock.json
 /src/IncidentManagement/package.json
+/.imtapp.json
