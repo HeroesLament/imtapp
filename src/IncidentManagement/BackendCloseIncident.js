@@ -71,3 +71,4 @@ function completeIncident(incidentFolderId, endDate) {
     return msg
   }
 }
+
