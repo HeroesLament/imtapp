@@ -37,7 +37,8 @@ var OpenTelemetryGASExporter = {
             payload: JSON.stringify(payload),
             headers: {
                 "signoz-access-token": this.INGESTION_KEY,
-                "Content-Type": 'application/json'
+                "Content-Type": 'application/json',
+                'muteHttpExceptions': true
             },
             contentType: 'application/json'
         });
@@ -46,16 +47,19 @@ var OpenTelemetryGASExporter = {
             method: 'POST',
             contentType: 'application/json',
             headers: {
-                "signoz-access-token": this.INGESTION_KEY,
-                'muteHttpExceptions': true
+                "signoz-access-token": this.INGESTION_KEY
             },
+            muteHttpExceptions: true,
             payload: JSON.stringify(payload)
         };
 
         try {
-            UrlFetchApp.fetch(this.ENDPOINT, options);
+            var response = UrlFetchApp.fetch(this.ENDPOINT, options);
+            if (response.getResponseCode() !== 200) {
+                console.log('Error: ' + response.getContentText());
+            }
         } catch (error) {
-            Logger.log('Failed to export span: ' + error.toString());
+            console.log('Failed to export span: ' + error.toString());
         }
     }
 };
