@@ -2,7 +2,7 @@
 SRC_DIR = src
 CONFIG_FILE = .imtapp.json
 
-setup-dev:
+setup-dev: dependency-check
 	@echo "Setting up development environment..."
 	# If the configuration file doesn't exist, create it
 	@if [ ! -f "$(CONFIG_FILE)" ]; then \
@@ -31,5 +31,9 @@ use-existing-config:
 			(cd $(SRC_DIR)/$$dir && clasp status); \
 		fi; \
 	done
+
+dependency-check:
+	@which clasp > /dev/null || (echo "Error: clasp is not installed. Please install it using 'npm install -g @google/clasp'." && exit 1)
+	@which jq > /dev/null || (echo "Error: jq is not installed. Please install it using your package manager." && exit 1)
 
 .PHONY: setup-dev create-config use-existing-config
