@@ -18,9 +18,12 @@ function getIncidentDashboardList() {
 
       let incidents = [];
       const tz = Session.getScriptTimeZone();
+      let limit = 5;
+      let startRow = Math.max(0, sheetData.length - limit);
 
       // Process each row for incidents
-      for (let drow = 0; drow < sheetData.length; drow++) {
+      for (let drow = startRow; drow < sheetData.length; drow++) {
+          span.addEvent('Spreadsheet row processed');
           const rowData = sheetData[drow];
           
           let incidentEndDate = rowData[headerMap["INCIDENT_END_DATE"]];
