@@ -43,4 +43,12 @@ dependency-check:
 	@which clasp > /dev/null || (echo "Error: clasp is not installed. Please install it using 'npm install -g @google/clasp'." && exit 1)
 	@which jq > /dev/null || (echo "Error: jq is not installed. Please install it using your package manager." && exit 1)
 
-.PHONY: setup-dev create-config use-existing-config dependency-check
+clean:
+	@if [ -f "$(CONFIG_FILE)" ]; then \
+		echo -e "$(RED)Removing $(CONFIG_FILE)...$(NC)"; \
+		rm $(CONFIG_FILE); \
+	else \
+		echo -e "$(YELLOW)$(CONFIG_FILE) does not exist, nothing to remove.$(NC)"; \
+	fi
+
+.PHONY: setup-dev create-config use-existing-config dependency-check clean
