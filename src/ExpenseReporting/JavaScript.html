@@ -1,0 +1,403 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+   $(document).ready(function() {
+    openSelectIncidentCard();
+});
+
+function openSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentMessage').empty();
+    $('#selectIncidentMenu').hide();
+    $('#selectIncidentCardButton').hide();
+    $('#selectIncidentCard').show();
+    $('#selectIncidentInprogress').show();
+    resetAddExpenseCard()
+    google.script.run.withSuccessHandler(loadSelectIncidentMenu).getOpenIncidents();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#selectIncidentCard").offset().top
+    }, 2000);
+}
+
+function loadSelectIncidentMenu(incidents) {
+    $('#incident').empty();
+    var option = '';
+    for (var i = 0; i < incidents.length; i++) {
+        if (incidents.length > 1 && i === 0) {
+            option += '<option value="" disabled selected>Select Incident...</option>';
+        }
+        if (incidents.length > 1) {
+            option += '<option value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+        if (incidents.length == 1) {
+            option += '<option  value="' + incidents[i][1].toString() + '">' + incidents[i][0].toString() + '</option>';
+        }
+    }
+    $('#selectIncidentInprogress').hide();
+    //If there is no active  incidents
+    if (option == "") {
+        option += '<option value="" disabled selected>No Open Incidents</option>';
+        $('#selectIncidentMessage').html('There are no active incidents the system....Don\'t worry somone will get lost soon...<a class="waves-effect waves-teal btn-flat" onclick="openSelectIncidentCard()">Try Again</a>');
+        $('#selectIncidentMenu').hide();
+        $('#selectIncidentMessage').show();
+        return;
+    }
+    $('#incident').append(option);
+    //if there is only one incident load the data
+    if (incidents.length == 1) {
+        $('#selectIncidentMessage').html("There is only one incident active in the system... going out on a limb here and guessing you want that one...");
+        $('#selectIncidentMessage').show();
+        setTimeout(loadIncidentSelection(), 2000);
+        return;
+    }
+    //show selcect menu
+    $('#selectIncidentMenu').show();
+    //Materilize Initation
+    $('select').formSelect();
+    var isVisible = $('#MAM').is(':visible');
+    if (isVisible === true) {
+        $('#selectIncidentCardButton').show();
+    }
+}
+
+function closeSelectIncidentCard() {
+    $('#selectIncidentMessage').hide();
+    $('#selectIncidentCardButton').show();
+    $('#selectIncidentCard').hide();
+}
+
+function loadIncidentSelection() {
+    closeSelectIncidentCard();
+    $('#MAM').hide();
+    loadExpenseList();
+    loadDonationList();
+    $('#MAM').show();
+    $('#navbar').show();
+    $('#fab').show();
+    var incidentName = $('#incident option:selected').text();
+    $('#mobileIncidentNameText').text(incidentName);
+    $('#navIncidentNameText').text(incidentName);
+}
+////
+//Add Expense Card Functions
+////
+function openAddExpenseCard(memberName) {
+    resetAddExpenseCard();
+    $('#addExpenseCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#addExpenseCard").offset().top
+    }, 2000);
+}
+
+function openAddDonationCard(memberName) {
+    resetAddExpenseCard();
+    $('#addDonationCard').show();
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("#addDonationCard").offset().top
+    }, 2000);
+}
+
+function resetAddExpenseCard() {
+    $('#addExpenseCard').hide();
+    $('#addExpenseForm')[0].reset();
+    $('#addExpenseCardBody').show();
+    $('#addExpenseCardButtons').show();
+    $('#addExpenseCardInprogress').hide();
+    updateAddExpenseButton();
+}
+function resetAddDonationCard() {
+    $('#addDonationCard').hide();
+    $('#addDonationForm')[0].reset();
+    $('#addDonationCardBody').show();
+    $('#addDonationCardButtons').show();
+    $('#addDonationCardInprogress').hide();
+    updateAddDonationButton();
+}
+
+function updateAddExpenseButton() {
+    var vendorName = $("#addVendorName").val();
+    var expenseDescription = $("#addExpenseDescription").val();
+    var expenseAmount = $("#addExpenseAmount").val();
+    var purchaserName = $("#addPurchaserName").val();
+    var purchaseMethod = $("#addPurchasePaymentMethod").val();
+    var purchaserReimbursement = $('input[name=purchaserReimbursement]:checked').val()
+    if ((vendorName == "" || vendorName == null || vendorName == undefined) || (expenseAmount == "" || expenseAmount == null || expenseAmount == undefined) || (purchaserName == "" || purchaserName == null || purchaserName == undefined) || (expenseDescription == "" || expenseDescription == null || expenseDescription == undefined) || (purchaseMethod == "" || purchaseMethod == null || purchaseMethod == undefined) || (purchaserReimbursement == undefined && purchaseMethod == "Purchaser")) {
+        $("#addExpenseButton").addClass("disabled")
+    } else {
+        $("#addExpenseButton").removeClass("disabled")
+    };
+    M.updateTextFields();
+}
+function updateAddDonationButton() {
+    var vendorName = $("#addDonorName").val();
+    var donationDescription = $("#addDonationDescription").val();
+    var donationAmount = $("#addDonationValue").val();
+    var purchaserName = $("#addAcceptedByName").val();
+    if ((vendorName == "" || vendorName == null || vendorName == undefined) || (donationAmount == "" || donationAmount == null || donationAmount == undefined) || (purchaserName == "" || purchaserName == null || purchaserName == undefined) || (donationDescription == "" || donationDescription == null || donationDescription == undefined)) {
+        $("#addDonationButton").addClass("disabled")
+    } else {
+        $("#addDonationButton").removeClass("disabled")
+    };
+    M.updateTextFields();
+}
+function addExpenseReport() {
+    $('#dashboardSummary').hide();
+    $('#addExpenseCardBody').hide();
+    $('#addExpenseCardButtons').hide();
+    $('#addExpenseCardInprogress').show();
+    var expenseDate = $("#addExpenseDate").val();
+    var vendorName = $("#addVendorName").val();
+    var expenseAmount = $("#addExpenseAmount").val();
+    var expenseDescription = $("#addExpenseDescription").val();
+    var purchaserName = $("#addPurchaserName").val();
+    var purchaseMethod = $("#addPurchasePaymentMethod").val();
+    var purchaserReimbursement = $('input[name=purchaserReimbursement]:checked').val()
+    var expenseNotes = $("#addNotes").val();
+    var incidentLog = $("#incident").val();
+    var files = $('#addDocumentation')[0].files;
+    var file = files[0];
+    if (file != "" && file != undefined && file != null) {
+        if (file.size > 1024 * 1024 * 5) {
+ var toastHTML = '<span>The selected file exceeds the 5 MB size limit.</span>';
+            var toastColor = "red";       
+            M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+            $('#addExpenseCardBody').show();
+            $('#addExpenseCardButtons').show();
+            $('#addExpenseCardInprogress').hide();
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var docFile = reader.result;
+            google.script.run.withSuccessHandler(addReportWrapup).withFailureHandler(addReportWrapup).addExpense(incidentLog, expenseDate, vendorName, expenseDescription, expenseAmount, purchaserName, purchaseMethod, purchaserReimbursement, expenseNotes, docFile);
+        }
+        reader.readAsDataURL(file);
+    } else {
+        google.script.run.withSuccessHandler(addReportWrapup).withFailureHandler(addReportWrapup).addExpense(incidentLog, expenseDate, vendorName, expenseDescription, expenseAmount, purchaserName, purchaseMethod, purchaserReimbursement, expenseNotes);
+    }
+}
+function addDonationReport() {
+    $('#dashboardSummary').hide();
+    $('#addDonationCardBody').hide();
+    $('#addDonationCardButtons').hide();
+    $('#addDonationCardInprogress').show();
+    var donationDate = $("#addDonationDate").val();
+    var donorName = $("#addDonorName").val();
+    var donationValue = $("#addDonationValue").val();
+    var donationDescription = $("#addDonationDescription").val();
+    var purchaserName = $("#addAcceptedByName").val();
+    var donationNotes = $("#addDonationNotes").val();
+    var incidentLog = $("#incident").val();
+    var files = $('#addDonationDocumentation')[0].files;
+    var file = files[0];
+    if (file != "" && file != undefined && file != null) {
+        if (file.size > 1024 * 1024 * 5) {
+ var toastHTML = '<span>The selected file exceeds the 5 MB size limit.</span>';
+            var toastColor = "red";       
+            M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+            $('#addDonationCardBody').show();
+            $('#addDonationCardButtons').show();
+            $('#addDonationCardInprogress').hide();
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var docFile = reader.result;
+            google.script.run.withSuccessHandler(addReportWrapup).withFailureHandler(addReportWrapup).addDonation(incidentLog, donationDate, donorName, donationDescription, donationValue, purchaserName, donationNotes, docFile);
+        }
+        reader.readAsDataURL(file);
+    } else {
+        google.script.run.withSuccessHandler(addReportWrapup).withFailureHandler(addReportWrapup).addDonation(incidentLog, donationDate, donorName, donationDescription, donationValue, purchaserName, donationNotes);
+    }
+}
+function addReportWrapup(e) {
+    resetAddExpenseCard();
+    resetAddDonationCard();    
+    
+       if (e[0] === true) {
+        var toastHTML = '<span>Expense '+e[1] + ' added.</span>';
+        var toastColor = "light-green-text"; 
+    } else {
+        var toastHTML = '<span>Somthing went wrong. ' + e[1]+'.</span>';
+        var toastColor = "red";       
+    }
+    M.toast({html: toastHTML, classes: toastColor, displayLength: '8000'});
+
+    loadExpenseList();
+    loadDonationList();
+}
+
+function loadExpenseList() {
+    $('#dashboardExpenseBody').hide();
+    $('#dashboardExpensePreloader').show();
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(createExpenseDashboard).getExpenseList(incidentLog);
+}
+function loadDonationList() {
+    $('#dashboardDonationBody').hide();
+    $('#dashboardDonationPreloader').show();
+    var incidentLog = $("#incident").val();
+    google.script.run.withSuccessHandler(createDonationDashboard).getDonationList(incidentLog);
+}
+function createExpenseDashboard(e) {
+    var expenseList = [];
+    var expenseTotal = 0
+    var incidentLog = $("#incident").val();
+    $('#dashboardExpenseData').empty();
+    var dashboardData = '';
+    for (var i = 0; i < e.length; i++) {
+        var rowTag = (e[i][8].toString());
+        dashboardData += '<tr><td id="Row_' + rowTag + '" class ="center-align">' + e[i][0].toString() + '</td><td class ="center-align">' + e[i][1] + '</td><td class ="center-align">' + e[i][2] + '</td><td class ="center-align">$' + e[i][3] + '</td><td class ="center-align">' + e[i][4] + '</td><td >' + e[i][6] + '</td><td class ="center-align">';
+        if (e[i][7] != "") {
+            dashboardData += '<a class="waves-effect waves-teal btn-flat"  onclick="window.open(\'' + e[i][7] + '\' );">View</a>';
+        } else {
+            dashboardData += '<span class="red-text">Not Uploaded</span>';
+        }
+        dashboardData += '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat disabled"  onclick="updateExpense(\'' + rowTag + '\' );">Update</a></td></tr>';
+        expenseTotal = expenseTotal + Number(e[i][3]);
+    }
+    if (expenseTotal > 0 || e.length > 0) {
+        expenseTotal = expenseTotal.toFixed(2);
+dashboardData += '<tr><td></td><td></td><td class ="right-align"><strong>Total:</strong></td><td class ="center-align"><strong>$' + expenseTotal + '</strong></td><td></td><td></td><td></td><td></td></tr>';
+    }
+    
+     if (dashboardData == "") {
+        $('#dashboardExpenseNoData').show();
+        $('#dashboardExpenseTable').hide();
+
+    } else {
+        $('#dashboardExpenseNoData').hide();
+        $('#dashboardExpenseData').html(dashboardData);
+        $('#dashboardExpenseTable').show();
+    }
+    
+    $('#dashboardExpenseTimestamp').html("<em>As of " + Date() + "</em>");
+    $('#dashboardExpensePreloader').hide();
+    $('#dashboardExpenseBody').show();
+}
+function createDonationDashboard(e) {
+    var expenseList = [];
+    var expenseTotal = 0
+    var incidentLog = $("#incident").val();
+    $('#dashboardDonationData').empty();
+    var dashboardData = '';
+    for (var i = 0; i < e.length; i++) {
+        var rowTag = (e[i][8].toString());
+        dashboardData += '<tr><td id="Row_' + rowTag + '" class ="center-align">' + e[i][0].toString() + '</td><td class ="center-align">' + e[i][1] + '</td><td class ="center-align">' + e[i][2] + '</td><td class ="center-align">$' + e[i][3] + '</td><td class ="center-align">' + e[i][4] + '</td><td>' + e[i][5] + '</td><td class ="center-align">';
+        if (e[i][6] != "") {
+            dashboardData += '<a class="waves-effect waves-teal btn-flat"  onclick="window.open(\'' + e[i][6] + '\' );">View</a>';
+        } else {
+            dashboardData += '<span class="red-text">None</span>';
+        }
+        dashboardData += '</td><td class ="center-align"><a class="waves-effect waves-teal btn-flat disabled"  onclick="updateDonation(\'' + rowTag + '\' );">Update</a></td></tr>';
+        expenseTotal = expenseTotal + Number(e[i][3]);
+    }
+    if (expenseTotal > 0 || e.length > 0) {
+        expenseTotal = expenseTotal.toFixed(2);
+dashboardData += '<tr><td></td><td></td><td class ="right-align"><strong>Total:</strong></td><td class ="center-align"><strong>$' + expenseTotal + '</strong></td><td></td><td></td><td></td><td></td></tr>';
+    }
+    
+     if (dashboardData == "") {
+        $('#dashboardDonationNoData').show();
+        $('#dashboardDonationTable').hide();
+
+    } else {
+        $('#dashboardDonationNoData').hide();
+        $('#dashboardDonationData').html(dashboardData);
+        $('#dashboardDonationTable').show();
+    }
+    
+    $('#dashboardDonationTimestamp').html("<em>As of " + Date() + "</em>");
+    $('#dashboardDonationPreloader').hide();
+    $('#dashboardDonationBody').show();
+}
+//Document Rdy Functions
+$(document).ready(function() {
+    $('#addExpenseForm').change(function() {
+        updateAddExpenseButton();
+    });
+    $('#addExpenseAmount').change(function() {
+        updateAddExpenseButton();
+        var expenseAmount = $("#addExpenseAmount").val();
+        expenseAmount = Number(expenseAmount).toFixed(2);
+        $("#addExpenseAmount").val(expenseAmount);
+    });
+    $('#addPurchasePaymentMethod').change(function() {
+        updateAddExpenseButton();
+        $('input:radio[name="purchaserReimbursement"]').each(function() {
+            $(this).prop("checked", false);
+        });
+    });
+
+});
+$(document).ready(function() {
+    $('#addDonationForm').change(function() {
+        updateAddDonationButton();
+    });
+    $('#addDonationValue').change(function() {
+        updateAddExpenseButton();
+        var expenseAmount = $("#addDonationValue").val();
+        expenseAmount = Number(expenseAmount).toFixed(2);
+        $("#addDonationValue").val(expenseAmount);
+    });
+    
+});
+/////////////////////////
+// CHECKIN CARD FUNCTIONS
+//////////////////////////
+//Runs on load of page
+$(document).ready(function() {
+    google.script.run.withSuccessHandler(createAutoCompleteMemberMenu).createMemberRoster();
+});
+//Create The Member Checkin AutoCompelte
+//Also creates the one for standby
+function createAutoCompleteMemberMenu(e) {
+    var members = new Array();
+    for (var i = 0; i < e.length; i++) {
+        members[e[i]] = null;
+    }
+    $(function() {
+      
+        $('#addPurchaserName').autocomplete({
+            data: members
+        });
+        $('#addAcceptedByName').autocomplete({
+            data: members
+        });
+    });
+}
+$(document).ready(function() {
+    $('#incident').change(function() {
+        loadIncidentSelection();
+    });
+});
+$(document).ready(function() {
+    $('select').formSelect();
+});
+$(document).ready(function() {
+    $('#addPurchasePaymentMethod').change(function() {
+        var purchaseMethod = $("#addPurchasePaymentMethod").val();
+        if (purchaseMethod == "Purchaser") {
+            $('#addPurchaserReimbursementSection').show();
+        } else {
+            $('#addPurchaserReimbursementSection').hide();
+        }
+    });
+});
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('.datepicker');
+    var options = {
+      defaultDate: new Date(),
+      setDefaultDate: true
+    };
+    var instances = M.Datepicker.init(elems, options);
+
+
+  });
+
+
+$(document).ready(function() {
+    $('.fixed-action-btn').floatingActionButton();
+});
+</script>

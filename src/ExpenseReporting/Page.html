@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_blank">
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" media="screen,projection" />
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body>
+    <div id="fab" class="fixed-action-btn toolbar hide-on-large-only" style="display:none">
+        <a class="btn-floating btn-large red" onclick="openAddExpenseCard()"><i class="material-icons">add</i>
+            <i class="large material-icons">menu</i>
+        </a>
+                <a class="btn-floating btn-large red" onclick="openAddDonationCard()"><i class="material-icons">add</i>
+            <i class="large material-icons">menu</i>
+        </a>
+    </div>
+    <nav id="navbar" class="hide-on-med-and-down" style="display:none">
+        <div class="navbar-fixed hide-on-med-and-down">
+            <nav>
+                <div class="nav-wrapper red">
+                    <a class="brand-logo">Incident: <span id="navIncidentNameText" onclick="openSelectIncidentCard()"></span></a>
+                    <ul class="right hide-on-med-and-down">
+                        <li><a onclick="openAddExpenseCard()">Add Expense</a></li>
+                        <li><a onclick="openAddDonationCard()">Add Donation</a></li>
+                        <li><a class="waves-effect waves-light btn blue darken-4" onclick="loadExpenseList(); loadDonationList();">Refresh</a></li>
+
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </nav>
+    <main>
+        <div class="row">
+            <div class="col s12 l6 offset-l3">
+                <div id="selectIncidentCard" class="card white">
+                    <div class="card-content blue-grey-text darken-1">
+                        <span class="card-title">Select Incident</span>
+                        <div id="selectIncidentMenu" style="display:none">
+                            <select id="incident">
+                                <option value="" disabled selected>Loading...</option>
+                            </select>
+                        </div>
+                        <div class="row center-align" id="selectIncidentInprogress" style="display:none">
+                            <div class="col s12">
+                                <div class="preloader-wrapper active">
+                                    <div class="spinner-layer spinner-red-only">
+                                        <div class="circle-clipper left">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="gap-patch">
+                                            <div class="circle"></div>
+                                        </div>
+                                        <div class="circle-clipper right">
+                                            <div class="circle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>Building Incident Menu...Comm Van Standing By KVRS Direct</div>
+                            </div>
+                        </div>
+                        <div id="selectIncidentMessage" style="display:none">
+                        </div>
+                    </div>
+                    <div id="selectIncidentCardButton" class="card-action" style="display:none">
+                        <a id="selectIncidentCloseButton" class="waves-effect waves-light btn green" onclick="closeSelectIncidentCard();">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="MAM" style="display:none">
+            <div class="row">
+                <div class="col s12">
+                    <h4 class="center-align hide-on-large-only red-text">Incident: </h4>
+                    <h4 class="center-align hide-on-large-only red-text" id="mobileIncidentNameText"></h4>
+                </div>
+            </div>
+            <div class="row">
+                <div id="addExpenseCard" class="col s12 l6" style="display:none">
+                    <div class="card white">
+                        <div class="card-content green-text">
+                            <span class="card-title">Add Expense</span>
+                            <div id="addExpenseCardBody">
+                                <form id="addExpenseForm">
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">date_range</i>
+                                        <label for="addExpenseDate">Purchase Date</label><input id="addExpenseDate" type="text" class="datepicker" placeholder="Today">
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">store</i>
+                                        <input type="text" id="addVendorName" placeholder="Name of Company Purchase Was Made From">
+                                        <label for="addVendorName">Vendor Name</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">attach_money</i>
+                                        <input type="number" min="0.00" step="0.01" id="addExpenseAmount" placeholder="12.87">
+                                        <label for="addExpenseAmount">Expense Amount</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">shopping_cart</i>
+                                        <input type="text" id="addExpenseDescription" placeholder="Brief Description (e.g AAA Batteries For SPOTs)">
+                                        <label for="addExpenseDescription">Expense Description</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">person</i>
+                                        <input type="text" id="addPurchaserName" class="autocomplete" placeholder="Name of KVRS Member Making Purchase">
+                                        <label for="addPurchaserName">Purchaser</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">payment</i>
+                                        <select id="addPurchasePaymentMethod">
+                                            <option value="" disabled selected>Choose your option</option>
+                                            <option value="KVRS Credit Card">KVRS Credit Card</option>
+                                            <option value="KVRS Account">KVRS Vendor/Store Account</option>
+                                            <option value="Purchaser">Paid For By Purchaser</option>
+                                            <option value="Purchaser">Paid For By AST</option>
+                                        </select>
+                                        <label>Payment Method</label>
+                                    </div>
+                                    <div class="input-field" id="addPurchaserReimbursementSection">
+                                        <p>
+                                            <label>Purchaser Requires Reimbursement</label>
+                                            <label>
+                                                <input name="purchaserReimbursement" type="radio" value="Yes" />
+                                                <span>Yes</span>
+                                            </label>
+                                            <label>
+                                                <input name="purchaserReimbursement" type="radio" value="No" />
+                                                <span>No</span>
+                                            </label>
+                                        </p>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">event_note</i>
+                                        <label for="addNotes">Notes</label><textarea id="addNotes" class="materialize-textarea"></textarea>
+                                    </div>
+                                    <div class="file-field input-field">
+                                        <div id="addDocumentationButton" class="btn">
+                                            <i class="material-icons left">receipt</i>
+                                            <span>Receipt/Invoice</span>
+                                            <input id="addDocumentation" type="file">
+                                        </div>
+                                        <div class="file-path-wrapper">
+                                            <input class="file-path validate" type="text" placeholder="Select File">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="row center-align" id="addExpenseCardInprogress" style="display:none">
+                                <div class="col s12 blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>Sendng this expense report to the big bank of Brett in the cloud ... </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="addExpenseCardButtons" class="card-action">
+                            <a id="addExpenseButton" class="waves-effect waves-light btn purple disabled" onclick="addExpenseReport()">Add Expense</a>
+                            <a id="closeAddExpenseButton" class="waves-effect waves-light btn deep-orange" onclick="resetAddExpenseCard()">Close</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="addDonationCard" class="col s12 l6" style="display:none">
+                    <div class="card white">
+                        <div class="card-content purple-text">
+                            <span class="card-title">Add Expense</span>
+                            <div id="addDonationCardBody">
+                                <form id="addDonationForm">
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">date_range</i>
+                                        <label for="addDonationDate">Donation Date</label><input id="addDonationDate" type="text" class="datepicker" placeholder="Today">
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">store</i>
+                                        <input type="text" id="addDonorName" placeholder="Name of Company or Individual Donating The Item">
+                                        <label for="addDonorName">Donor Name</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">attach_money</i>
+                                        <input type="number" min="0.00" step="0.01" id="addDonationValue" placeholder="20.10">
+                                        <label for="addDonationValue">Estimated Value</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">shopping_cart</i>
+                                        <input type="text" id="addDonationDescription" placeholder="Brief Description (e.g A Delicious Hot Dinner)">
+                                        <label for="addDonationDescription">Donation Description</label>
+                                    </div>
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">person</i>
+                                        <input type="text" id="addAcceptedByName" class="autocomplete" placeholder="Name of KVRS Member Accepting Donation">
+                                        <label for="addAcceptedByName">Purchaser</label>
+                                    </div>
+
+
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">event_note</i>
+                                        <label for="addDonationNotes">Notes</label><textarea id="addDonationNotes" class="materialize-textarea"></textarea>
+                                    </div>
+                                    <div class="file-field input-field">
+                                        <div id="addDocumentationButton" class="btn">
+                                            <i class="material-icons left">receipt</i>
+                                            <span>Receipt/Invoice</span>
+                                            <input id="addDonationDocumentation" type="file">
+                                        </div>
+                                        <div class="file-path-wrapper">
+                                            <input class="file-path validate" type="text" placeholder="Select File">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="row center-align" id="addDonationCardInprogress" style="display:none">
+                                <div class="col s12 blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>Sendng this donation report to the big bank of Brett in the cloud ... </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="addDonationCardButtons" class="card-action">
+                            <a id="addDonationButton" class="waves-effect waves-light btn purple disabled" onclick="addDonationReport()">Add Expense</a>
+                            <a id="closeAddDonationButton" class="waves-effect waves-light btn deep-orange" onclick="resetAddDonationCard()">Close</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="updateCard" class="col s12 l4" style="display:none">
+                    <div class="card white">
+                        <div class="card-content blue-text text-darken-2">
+                            <span class="card-title">Member Assignment</span>
+                            <div id="updateCardBody">
+                                <form id="updateCardForm">
+                                    <div class="input-field">
+                                        <i class="material-icons prefix">assignment_ind</i>
+                                        <select id="updateMemberName">
+                                            <option value="" disabled selected>Loading...</option>
+                                        </select>
+                                    </div>
+                                    <div id="updateMemberAssignments" style="display: none;">
+                                        <div class="input-field">
+                                            <i class="material-icons prefix">group</i>
+                                            <input type="text" id="updateMemberTeam" class="autocomplete">
+                                            <label for="updateMemberTeam">Team/Position Assignment</label>
+                                            <span class="helper-text">Leave Field Blank To Remove Assignment</span>
+                                        </div>
+                                        <div class="input-field">
+                                            <i class="material-icons prefix">leak_add</i>
+                                            <select id="updateMemberBeacon" disabled>
+                                                <option value="" disabled selected>Loading.....</option>
+                                            </select>
+                                            <label for="updateMemberBeacon">SPOT Beacon Assignment</label>
+                                        </div>
+                                        <div class="switch ">
+                                            <label> All SPOT Beacons <input id="commvanSpotOnly" type="checkbox" onclick="loadSpotBeaconList()" checked="checked">
+                                                <span class="lever"></span> Comm Van Only </label>
+                                        </div>
+                                        <div class="input-field">
+                                            <i class="material-icons prefix">date_range</i>
+                                            <label for="updateTime">Date of Assignment</label><input id="updateDate" type="text" class="datepicker" placeholder="Today">
+                                        </div>
+                                        <div class="input-field">
+                                            <i class="material-icons prefix">access_time</i>
+                                            <label for="updateTime">Time of Assignment</label><input id="updateTime" type="text" class="timepicker_alt" placeholder="Now">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="row center-align" id="updatePreloader" style="display:none">
+                                <div class=" col s12 blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>Updating Member Assignment ... I promise this is better than paper T-Cards ... </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="updateCardButtons" class="card-action">
+                            <a id="updateMemberButton" class="waves-effect waves-light btn blue darken-2 disabled" onclick="updateMember()">Update Assignment</a>
+                            <a id="closeUpdateCard" class="waves-effect waves-light btn deep-orange" onclick="resetUpdateExpenseCard()">Close</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div id="dashboardExpsense" class="card">
+                        <div class="card-content">
+                            <span id="dashboardTitle" class="card-title green-text text-darken-4"><span id="dashboardTitleIncident"></span>Incident Expenses</span>
+                            <div id="dashboardExpensePreloader" class="row" style="display:none">
+                                <div class="col s12 center-align blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p>Loading ... Getting out the microfiche reader...</p>
+                                </div>
+                            </div>
+                            <div id="dashboardExpenseBody">
+                                <div id="dashboardExpenseNoData" style="display:none">
+                                    <h6 class="center-align red-text">No expenses have been logged...come on now these these operations aren't free!</h6>
+                                    <div class="divider"></div>
+                                </div>
+                                <table id="dashboardExpenseTable" class="responsive-table striped center-align">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Vendor</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Purchaser</th>
+                                            <th>Notes</th>
+                                            <th>Reciept</th>
+                                            <th class="center-align">Update</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardExpenseData">
+                                        <tr>
+                                            <td>Loading....Getting out the microfiche reader?</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="row">
+                                    <div class="col s12">
+                                        <h6 id="dashboardExpenseTimestamp" class="right-align"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                        <div class="row">
+                <div class="col s12">
+                    <div id="dashboardDonation" class="card">
+                        <div class="card-content">
+                            <span id="dashboardTitle" class="card-title purple-text text-darken-4"><span id="dashboardTitleIncident"></span>Incident Donations</span>
+                            <div id="dashboardDonationPreloader" class="row" style="display:none">
+                                <div class="col s12 center-align blue-grey-text darken-1">
+                                    <div class="preloader-wrapper active">
+                                        <div class="spinner-layer spinner-red-only">
+                                            <div class="circle-clipper left">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="gap-patch">
+                                                <div class="circle"></div>
+                                            </div>
+                                            <div class="circle-clipper right">
+                                                <div class="circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p>Loading ... Getting out the microfiche reader...</p>
+                                </div>
+                            </div>
+                            <div id="dashboardDonationBody">
+                                <div id="dashboardNoData" style="display:none">
+                                    <h6 class="center-align red-text">No donations have been logged ... check again for generous donations of free stuff later!</h6>
+                                    <div class="divider"></div>
+                                </div>
+                                <table id="dashboardDonationTable" class="responsive-table striped center-align">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Donor</th>
+                                            <th>Description</th>
+                                            <th>Value</th>
+                                            <th>Accepted By</th>
+                                            <th>Notes</th>
+                                            <th>Documentation</th>
+                                            <th class="center-align">Update</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardDonationData">
+                                        <tr>
+                                            <td>Loading....Getting out the microfiche reader?</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="row">
+                                    <div class="col s12">
+                                        <h6 id="dashboardDonationTimestamp" class="right-align"></h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal Structure -->
+        <div id="checkoutMemberModal" class="modal">
+            <div class="modal-content">
+                <h4>Confirm Member Checkout</h4>
+                <form id="checkoutModalForm">
+                    <div>Are you sure you want to checkout <strong><span id="checkoutModalMemberNameText"></span></strong> at <div class=" input-field inline"><input id="checkoutModalTime" type="text" class="timepicker_alt" placeholder="Now"></div> on <div class=" input-field inline"><input id="checkoutModalDate" type="text" class="datepicker" placeholder="Today"></div>?</div>
+                    <div style="display:none"> <input id="checkoutModalMemberName" type="text"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a class="modal-close waves-effect waves-green btn-flat" onclick="checkoutMemberModal()">Procced</a>
+            </div>
+        </div>
+        <?!= include('JavaScript'); ?>
+    </main>
+</body>
+
+</html>
