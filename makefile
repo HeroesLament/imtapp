@@ -2,36 +2,33 @@
 SRC_DIR = src
 CONFIG_FILE = .imtapp.json
 
-# Target to setup the dev environment
 setup-dev:
 	@echo "Setting up development environment..."
-	
-	# Check if the configuration file exists
+	# If the configuration file doesn't exist, create it
 	@if [ ! -f "$(CONFIG_FILE)" ]; then \
-		echo "{" > $(CONFIG_FILE); \
-		for dir in $(shell ls $(SRC_DIR)); do \
-			read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
-			if [ "$$scriptId" != "ignore" ]; then \
-				echo "Linking $$dir with ScriptID: $$scriptId"; \
-				echo "{ \"scriptId\": \"$$scriptId\", \"rootDir\": \"$(PWD)/$(SRC_DIR)/$$dir\" }" > $(SRC_DIR)/$$dir/.clasp.json; \
-				echo "\"$$dir\": \"$$scriptId\"," >> $(CONFIG_FILE); \
-			else \
-				echo "Ignoring $$dir..."; \
-			fi; \
-		done; \
-		sed -i '$$s/,$$//' $(CONFIG_FILE);  # Remove trailing comma from the last entry
-		echo "}" >> $(CONFIG_FILE); \
+		$(MAKE) create-config; \
+	else \
+		$(MAKE) use-existing-config; \
 	fi
-	
-	@for dir in $(shell ls $(SRC_DIR)); do \
-		if [ -f "$(CONFIG_FILE)" ]; then \
-			scriptId=$$(jq -r ".$$dir" $(CONFIG_FILE)); \
-			if [ "$$scriptId" != "null" ]; then \
-				echo "Using ScriptID $$scriptId for $$dir from $(CONFIG_FILE)"; \
-			fi; \
+
+create-config:
+	@echo "{" > $(CONFIG_FILE); \
+	for dir in $(shell ls $(SRC_DIR)); do \
+		read -p "Enter ScriptID for $$dir (or type 'ignore' to skip): " scriptId; \
+		if [ "$$scriptId" != "ignore" ]; then \
+			echo "\"$$dir\": \"$$scriptId\"," >> $(CONFIG_FILE); \
 		fi; \
-		echo "Checking clasp status for $$dir..."; \
-		(cd $(SRC_DIR)/$$dir && clasp status); \
+	done; \
+	sed -i '$$s/,$$//' $(CONFIG_FILE); \
+	echo "}" >> $(CONFIG_FILE)
+
+use-existing-config:
+	@for dir in $(shell ls $(SRC_DIR)); do \
+		scriptId=$$(jq -r ".$$dir" $(CONFIG_FILE)); \
+		if [ "$$scriptId" != "null" ]; then \
+			echo "Using ScriptID $$scriptId for $$dir from $(CONFIG_FILE)"; \
+			echo "{ \"scriptId\": \"$$scriptId\", \"rootDir\": \"$(PWD)/$(SRC_DIR)/$$dir\" }" > $(SRC_DIR)/$$dir/.clasp.json; \
+		fi; \
 	done
 
-.PHONY: setup-dev
+.PHONY: setup-dev create-config use-existing-config
