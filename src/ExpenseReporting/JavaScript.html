@@ -21,6 +21,7 @@ function openSelectIncidentCard() {
 
 function loadSelectIncidentMenu(incidents) {
     $('#incident').empty();
+    console.log(incidents);
     var option = '';
     for (var i = 0; i < incidents.length; i++) {
         if (incidents.length > 1 && i === 0) {
