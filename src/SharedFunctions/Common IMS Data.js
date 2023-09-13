@@ -56,12 +56,8 @@ function getIncidentList(filterRowHeader, criteria, logRowHeader) {
             var startDateRow = hrow;
         };
     }
-    Logger.log("Name Row: " + nameRow);
-    Logger.log("Filter Row: " + filterRow);
-    Logger.log("Log Row: " + logRow);
 
     for (var row = 0; row < sheetDataLen; row++) {
-        Logger.log(sheetData[row][filterRow]);
         var incidentName;
         var logId;
         var incidentNameWithDate = formatDate(new Date(sheetData[row][startDateRow])) + ", " + sheetData[row][nameRow];
