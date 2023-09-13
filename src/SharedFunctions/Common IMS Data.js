@@ -53,7 +53,12 @@ function getIncidentList(filterRowHeader, criteria, logRowHeader) {
             var logRow = hrow
         };
     }
+    Logger.log("Name Row: " + nameRow);
+    Logger.log("Filter Row: " + filterRow);
+    Logger.log("Log Row: " + logRow);
+
     for (var row = 0; row < sheetDataLen; row++) {
+        Logger.log(sheetData[row][filterRow]);
         var incidentName;
         var logId;
         if (criteria === undefined || filterRowHeader === undefined) {
