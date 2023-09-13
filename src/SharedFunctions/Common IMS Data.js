@@ -52,6 +52,9 @@ function getIncidentList(filterRowHeader, criteria, logRowHeader) {
         if (sheetHeaders[0][hrow].toString() == logRowHeader) {
             var logRow = hrow
         };
+        if (sheetHeaders[0][hrow].toString() == "INCIDENT_START_DATE") {
+            var startDateRow = hrow;
+        };
     }
     Logger.log("Name Row: " + nameRow);
     Logger.log("Filter Row: " + filterRow);
@@ -61,15 +64,16 @@ function getIncidentList(filterRowHeader, criteria, logRowHeader) {
         Logger.log(sheetData[row][filterRow]);
         var incidentName;
         var logId;
+        var incidentNameWithDate = formatDate(new Date(sheetData[row][startDateRow])) + ", " + sheetData[row][nameRow];
         if (criteria === undefined || filterRowHeader === undefined) {
             incidents.push([
-                sheetData[row][nameRow],
+                incidentNameWithDate, // Use the modified incident name
                 sheetData[row][logRow]
             ]);
         } else {
             if (sheetData[row][filterRow] === criteria) {
                 incidents.push([
-                    sheetData[row][nameRow],
+                    incidentNameWithDate, // Use the modified incident name
                     sheetData[row][logRow]
                 ]);
             }
@@ -114,4 +118,15 @@ try{
         console.log("File Upload Error: " + error);
     }
 
+}
+
+function formatDate(dateObj) {
+    var months = [
+        'January', 'February', 'March', 'April', 'May', 'June', 'July',
+        'August', 'September', 'October', 'November', 'December'
+    ];
+    var day = dateObj.getDate();
+    var month = months[dateObj.getMonth()];
+    var year = dateObj.getFullYear();
+    return month + ' ' + (day < 10 ? '0' + day : day) + ', ' + year;
 }
