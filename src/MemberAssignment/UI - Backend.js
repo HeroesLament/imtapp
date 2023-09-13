@@ -5,7 +5,8 @@ function createVolRoster() {
 
 function getOpenIncidents() {
     var incidents = SharedFunctions.getIncidentList("ENABLE_ASSIGNMENT", true, "INCIDENT_MEMBER_DATA_ID")
-    return incidents;
+    console.log(incidents)
+    return incidents
 }
 
 function getIMTPositions() {
