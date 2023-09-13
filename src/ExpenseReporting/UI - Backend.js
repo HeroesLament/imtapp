@@ -1,5 +1,6 @@
 function getOpenIncidents() {
     var incidents = SharedFunctions.getIncidentList("ENABLE_EXPENSE",true,"INCIDENT_EXPENSE_DATA_ID")
+    console.log(incidents)
     return incidents;
 }
 
