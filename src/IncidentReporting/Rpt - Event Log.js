@@ -56,7 +56,7 @@ function generateEventLogReport(incidentFolderId) {
             var reportFileId = SharedFunctions.copyDriveFile(templateFileId, incidentFolderId);
         } else {
             DriveApp.getFileById(oldReportFileId).setTrashed(true);
-            var reportFileId = SharedFunctions.copyDriveFile(templateFileId, incidentFolderId);
+            var reportFileId = SharedFunctions.copyDriveFile(templateFileId, incidentFolderId); // SLOW
         }
         var report = createEventLogReport(incidentLog, reportFileId, incidentName, incidentNumber, incidentStartDate, incidentEndDate);
         if (typeof report[1] === 'string' && report[1].startsWith('1')) {
