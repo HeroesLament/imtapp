@@ -23,13 +23,13 @@ function mergeDocsFiles(documentID_1, documentID_2) {
   }
 }
 
-    function copyDriveFile(sourceFileId, destinationFolderId) {
-    var sourceFile = DriveApp.getFileById(sourceFileId);
-    var sourceFileName = sourceFile.getName();
-    var newFileName = sourceFileName;
-    var targetFolder = DriveApp.getFolderById(destinationFolderId);
-    var newFile = sourceFile.makeCopy(newFileName, targetFolder);
-    return newFile.getId();
+function copyDriveFile(sourceFileId, destinationFolderId) {
+  var sourceFile = DriveApp.getFileById(sourceFileId);
+  var sourceFileName = sourceFile.getName();
+  var newFileName = sourceFileName;
+  var targetFolder = DriveApp.getFolderById(destinationFolderId);
+  var newFile = sourceFile.makeCopy(newFileName, targetFolder);
+  return newFile.getId();
 }
 
 function fillDocumentTemplate(doc, keyword, newText) {
