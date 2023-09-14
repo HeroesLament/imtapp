@@ -504,7 +504,7 @@ function reportsCompilePackage() {
 function reportsWrapup(e) {
     resetReportsIncidentCard();
     if (e[0] === true) {
-        var toastHTML = '<span>Requested report is now available in the <a href="' + e[1].toString() + '" target="_blank">incident folder</a>.</span>';
+        var toastHTML = '<span>Requested report is now available in the <a href="' + e[1].toString() + '" target="_blank">incident folder</a>.</span>'; // BROKEN
         var toastColor = "light-green-text";
     } else {
         var toastHTML = '<span>Unable to sucessfully generate the requested report. ' + e[1].toString() + '.</span>';
