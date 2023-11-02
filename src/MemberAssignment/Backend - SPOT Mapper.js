@@ -1,4 +1,6 @@
 function syncSpotData() {
+  const span = OpenTelemetryGASExporter.createSpan('syncSpotData');
+  span.setAttribute('Mapper Sheet ID', SystemSettings.SPOT_INCIDENT_MAPPER_ID);
   try {
   var ss = SpreadsheetApp.openById(SystemSettings.SPOT_INCIDENT_MAPPER_ID);
   var mapper = ss.getSheets()[1];
@@ -27,10 +29,13 @@ function syncSpotData() {
     console.log("Completed createIncidentPositionLog For Incident:" + incidentName)
     span.addEvent('Completed createIncidentPositionLog for incident' + incidentName)
   }
+  span.addEvent('SPOT Incident Mapper updated successfully');
+  OpenTelemetryGASExporter.endSpan(span);
   } catch (error) {
     span.addEvent('SPOT Incident Mapper failed to update');
+    OpenTelemetryGASExporter.endSpan(span);
   }
-  span.addEvent('SPOT Incident Mapper updated successfully');
+
 }
 
 function createIncidentPositionLog(incidentSheet, incidentName) {
