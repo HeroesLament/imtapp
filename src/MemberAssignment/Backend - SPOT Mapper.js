@@ -64,21 +64,19 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
         colIncidentEndDate = i;
       }
     }
-    
+
+    span.addEvent('Checking row for incidentSheet match', {
+      'incidentSheet': incidentSheet
+    });
     var incidentEndDate;
     for (var row = 0; row < sheetData.length; row++) {
-      span.addEvent('Checking row for incidentSheet match', {
-        'rowIndex': row,
-        'incidentSheetValueAtRow': sheetData[row][colIncidentFolderId],
-        'incidentSheet': incidentSheet
-      });
-    
       if (sheetData[row][colIncidentFolderId] == incidentSheet) {
         incidentEndDate = sheetData[row][colIncidentEndDate];
     
         span.addEvent('Match found', {
           'rowIndex': row,
-          'incidentEndDate': incidentEndDate
+          'incidentEndDate': incidentEndDate,
+          'incidentSheet': incidentSheet
         });
     
         break;
