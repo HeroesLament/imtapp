@@ -41,11 +41,16 @@ function syncSpotData() {
 }
 
 function createIncidentPositionLog(incidentSheet, incidentName) {
+  const span = OpenTelemetryGASExporter.createSpan('syncSpotData');
   try {
     console.log("START: createIncidentPositionLog for" + incidentSheet)
 
     var ss = SpreadsheetApp.openById(SystemSettings.IMS_INCIDENT_LOG_SHEET_ID);
     var sheet = ss.getSheetByName("IMS Incident Log");
+    span.addEvent('Start reading data', {
+      'sheetName': 'IMS Incident Log',
+      'operation': 'getDataRange().getValues()'
+    });
     var sheetData = sheet.getDataRange().getValues();
     var sheetHeaders = sheetData[0];
     var sheetData = sheet.getRange(2, 1, (sheet.getLastRow() - 1), sheet.getLastColumn()).getValues();
@@ -73,8 +78,11 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
 
       var filterEnd = new Date();
       var activeBeacons = getIncdentAssignmentList(incidentSheet, true);
-      console.log("activeBeacons: " + activeBeacons)
       var teamList = [];
+      console.log("activeBeacons: " + activeBeacons)
+      span.addEvent('Start filtering and processing data', {
+        'activeBeaconsCount': activeBeacons.length
+      });
       for (var row = 0; row < activeBeacons.length; row++) {
         if (activeBeacons[row][5] == "" || activeBeacons[row][5] == undefined) {
           teamList.push([activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], new Date(), activeBeacons[row][1]]);
@@ -138,7 +146,13 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
           endColumnIndex: exportDataWidth
         });
         valuesToSet.push(...exportData);
-        
+
+        span.addEvent('Start writing data to sheet', {
+          'sheetName': exportSheet.getName(),
+          'range': 'A2:' + exportSheet.getRange(2, 1, exportDataLen, exportDataWidth).getA1Notation(),
+          'dataSize': exportData.length
+        });
+
         if (rangesToClear.length > 0) {
           Sheets.Spreadsheets.batchUpdate({
             requests: [{
@@ -170,11 +184,20 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
         }
       }
     }
-
+    span.addEvent('Start synchronizing data', {
+      'incidentSheetId': incidentSheet
+    });
     syncIncidentMapper(incidentSheet, incidentName)
-    console.log("COMPLETE: createIncidentPositionLog for" + incidentSheet)
+    span.addEvent('Incident position log creation completed');
+    console.log("COMPLETE: createIncidentPositionLog for" + incidentSheet);
+    OpenTelemetryGASExporter.endSpan(span);
+    OpenTelemetryGASExporter.export(span);
   } catch (error) {
+    span.setAttribute('error', true);
     console.log("ERROR: createIncidentPositionLog:" + error);
+    span.addEvent('ERROR: createIncidentPositionLog', {error: error.toString()});
+    OpenTelemetryGASExporter.endSpan(span);
+    OpenTelemetryGASExporter.export(span);
   }
 }
 
