@@ -1,0 +1,497 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>// The code in this function runs when the page is loaded.
+$(document).ready(function() {
+	var offset = new Date().getTimezoneOffset();
+	$('#dashboardTable').hide();
+	$('#dashboardNoData').hide();
+	$('#dashboardPreloader').show();
+	google.script.run.withSuccessHandler(createDashboard).getOpenBeacons(offset);
+	autoRefreshDashboard();
+});
+
+//Load The Partner Drop Down
+// The code in this function runs when the page is loaded.
+$(document).ready(function() {
+	google.script.run.withSuccessHandler(loadPartnerMenu).getAvailablePartners();
+});
+
+function loadPartnerMenu(partners) {
+	$('#partner').empty();
+  var defaultSet = false;
+	var option = '';
+	for (var i = 0; i < partners.length; i++) {
+		if (i === 0) option += '<option value="" disabled selected>Select Partner Location</option>';
+    if (partners[i][1] === true){
+          $("#myselect").find('option:selected').removeAttr("selected");
+      		option += '<option value="' + partners[i][0].toString() + '" selected="selected">' + partners[i][0].toString() + '</option>';
+          defaultSet = true;
+    }
+    else{
+      		option += '<option value="' + partners[i][0].toString() + '">' + partners[i][0].toString() + '</option>';
+    }
+  }
+  
+	if (option == "") option += '<option value="" disabled selected>No Partner Sites Available</option>';
+	$('#partner').append(option);
+	$('select').formSelect();
+	var elem = document.getElementById('selectPartnerModal');
+	var instance = M.Modal.getInstance(elem);
+  if (defaultSet === false){instance.open();
+  }
+  else{
+    selectPartner();
+  }
+}
+
+
+// The code in this function runs when the page is loaded.
+//Loads The Available Beacons When a A Partner Is Selected
+function selectPartner() {
+	//hides the reminder box once the partner is selected
+	setTimeout(function() {
+		document.getElementById('msgCard').style.display = 'none';
+	}, 5000);
+	var partner = $('select#partner').val();
+	if (partner == null) return false;
+	$('a#partnerLocationButton').text(partner);
+	google.script.run.withSuccessHandler(loadAvailableBeaconsMenu).getAvailableBeacons(partner);
+	$('#electronic_Beacon').empty();
+	$('#paper_Beacon').empty();
+	var option = '<option value="" disabled selected>Loading...</option>';
+	$('#electronic_Beacon').append(option);
+	$('#paper_Beacon').append(option);
+	$('select').formSelect();
+	$('.tabs').tabs('select', 'dashboard');
+}
+//Button - Refreshes Avalable Beacon List
+function refreshAvailableBeacons() {
+	google.script.run.withSuccessHandler(loadAvailableBeaconsMenu).getAvailableBeacons($('select#partner').val());
+	$('#electronic_Beacon').empty();
+	$('#paper_Beacon').empty();
+	var option = '<option value="" disabled selected>Loading...</option>';
+	$('#electronic_Beacon').append(option);
+	$('#paper_Beacon').append(option);
+	$('select').formSelect();
+}
+
+function loadAvailableBeaconsMenu(openBeacons) {
+	$('#electronic_Beacon').empty();
+	$('#paper_Beacon').empty();
+	var option = '';
+	for (var i = 0; i < openBeacons.length; i++) {
+		if (i === 0) option += '<option value="" disabled selected>Select a available beacon</option>';
+		option += '<option value="' + openBeacons[i].toString() + '">' + openBeacons[i].toString() + '</option>';
+	}
+	if (option == "") option += '<option value="" disabled selected>No beacons available</option>';
+	$('#electronic_Beacon').append(option);
+	$('#paper_Beacon').append(option);
+	$('select').formSelect();
+}
+//Load Electonic Trip Plans On Page Load
+$(document).ready(function() {
+	google.script.run.withSuccessHandler(loadDraftTripPlans).getAvalableDraftTripPlans();
+});
+
+function loadDraftTripPlans(availableDraftTripPlans) {
+	$('#electronic_TripPlan').empty();
+	var option = '';
+	for (var i = 0; i < availableDraftTripPlans.length; i++) {
+		if (i === 0) option += '<option value="" disabled selected>Select Available Trip Plan</option>';
+		option += '<option value="' + availableDraftTripPlans[i][0].toString() + '">' + availableDraftTripPlans[i][1].toString() + '</option>';
+	}
+	if (option == "") option += '<option value="" disabled selected>No Draft Electonic Trip Plans Available</option>';
+	$('#electronic_TripPlan').append(option);
+	$('select').formSelect();
+}
+
+function refreshAvailableDraftTripPlans() {
+	$('#electroinc_DraftTripplanInfo').hide();
+	google.script.run.withSuccessHandler(loadDraftTripPlans).getAvalableDraftTripPlans();
+}
+
+//
+//Submit Functions
+//
+function closeoutSubmit() {
+	var tp = $('#closeoutModalTripplanId').text();
+	var partner = $('select#partner').val();
+	var notes = $('textarea#closeout_AdditionalNotes').val();
+	var cancel = false;
+
+	if (!partner || partner.length === 0) {
+		showErrorModal("You Must Select A Partner Location");
+		return;
+	}
+
+	if ($('#closeoutModalCancel').is(":checked")) {
+		cancel = true;
+	}
+
+	$('#closeoutModalBody').hide();
+	$('#closeoutModalFooter').hide();
+	$('#closeoutModalProgress').show();
+	google.script.run.withSuccessHandler(closeoutWrapup).withFailureHandler(closeoutWrapup).closeoutBeacon(tp, notes, $('select#partner').val(), cancel);
+}
+
+function closeoutWrapup(e) {
+	refreshDashboard();
+  $('#closeoutModal').modal('close');
+	if (e[0] === "OK") {
+  showMsgCard('Trip Plan ' + e[1] + ' Sucessfully Closed',false);
+	} else {
+    var error = 'Error encountered while closing out trip plan ' + e[1] + '.<br>Details: ' + e[2] + '<br>Please try again or contact system@ketchikanrescue.org for further assistance if the issue persists.';
+		showMsgCard(error, true);
+	}
+	$('#closeoutForm')[0].reset();
+	$('#closeoutModalProgress').hide();
+	$('#closeoutModalBody').show();
+	$('#closeoutModalFooter').show();
+}
+
+function electronic_VerifyData() {
+	var partner = $('select#partner').val();
+	var beacon = $('select#electronic_Beacon').val();
+	var tp = $('select#electronic_TripPlan').val();
+	var error = "";
+	if (!partner || partner.length === 0) {
+		error += "You Must Select A Partner Location<br>";
+	}
+	if (!beacon || beacon.length === 0) {
+		error += "You Must Select A SPOT Beacon To Checkout<br>";
+	}
+	if (!tp || tp.length === 0) {
+		error += "You Must Select A Draft Trip Plan To Activate<br>";
+	}
+
+	if (error != "") {
+		showErrorModal(error);
+		return;
+	}
+
+	var offset = new Date().getTimezoneOffset();
+  $('#checkout_section').hide();
+	$('#electronicFields').hide();
+	$('#checkoutProgress').show();
+	google.script.run.withSuccessHandler(electronic_ShowVerifySuccess).verifyTripPlanLogElectronic(tp, beacon, offset);
+}
+
+function electronic_VerifyBack() {
+	$('#electronicFields').show();
+	$('#electronic_verify').hide();
+}
+
+function electronic_ShowVerifySuccess(e) {
+	document.getElementById("electronic_verify_beacon").innerHTML = e[0];
+	document.getElementById("electronic_verify_name").innerHTML = e[1];
+	document.getElementById("electronic_verify_start").innerHTML = e[2];
+	document.getElementById("electronic_verify_end").innerHTML = e[3];
+	document.getElementById("electronic_verify_overdue").innerHTML = e[4];
+  var error ="";
+	if (new Date(e[3]) < new Date()) {
+		error +="The Draft Trip Plan Has A Expected Return Date/Time Is In The Past<br>";
+	}
+	if (new Date(e[4]) < new Date()) {
+		error +="The Draft Trip Plan Has A Overdue Date/Time Is In The Past";
+	}
+	if (error != "") {
+		showErrorModal(error);
+		return;
+	}
+  $('#checkoutProgress').hide();
+  $('#checkout_section').show();
+	$('#electronic_verify').show();
+}
+
+function electronic_SubmitForm() {
+	var partner = $('select#partner').val();
+	var beacon = $('select#electronic_Beacon').val();
+	var tp = $('select#electronic_TripPlan').val();
+	var notes = $('textarea#electronic_AdditionalNotes').val();
+	$('#electronic_verify').hide();
+	$('#checkout_section').hide();
+	$('#checkoutProgress').show();
+	google.script.run.withSuccessHandler(electronic_WrapupCheckout).withFailureHandler(electronic_WrapupCheckout).addToTripPlanLogElectronic(tp, partner, beacon, notes);
+}
+
+function electronic_WrapupCheckout(e) {
+	$('#electronicCheckoutForm')[0].reset();
+	$('#electronicFields').show();
+  $('#checkout_section').show();
+  $('#checkoutProgress').hide();
+	google.script.run.withSuccessHandler(loadAvailableBeaconsMenu).getAvailableBeacons($('select#partner').val());
+	google.script.run.withSuccessHandler(loadDraftTripPlans).getAvalableDraftTripPlans();
+	var offset = new Date().getTimezoneOffset();
+	$('.tabs').tabs('select', 'dashboard');
+	if (e[0] === "OK") {
+    showMsgCard('Trip Plan ' + e[1] + ' Sucessfully Activated',false);
+    refreshDashboard();
+	} else {
+		var error = 'Error encountered while activating trip plan ' + e[1] + '.<br>Details: ' + e[2] + '<br>Please try again or contact system@ketchikanrescue.org for further assistance if the issue persists.';
+		showErrorModal(error);
+	}
+}
+var file,
+reader = new FileReader();
+reader.onloadend = function(e) {
+	if (e.target.error != null) {
+		showErrorModal("File " + file.name + " could not be read.");
+		return;
+	} else {
+		var partner = $('select#partner').val();
+		var beacon = $('select#paper_Beacon').val();
+		var lastName = $('input#paper_LastName').val();
+		var firstName = $('input#paper_FirstName').val();
+		var name = lastName + ", " + firstName;
+		var dateStart = $('input#paper_StartDate').val();
+		var dateEnd = $('input#paper_EndDate').val();
+		var dateOverdue = $('input#paper_OverdueDate').val();
+		var timeStart = $('input#paper_StartTime').val();
+		var timeEnd = $('input#paper_EndTime').val();
+		var timeOverdue = $('input#paper_OverdueTime').val();
+		var start = dateStart + " " + timeStart;
+		var startDate = new Date(start).toString();
+		var end = dateEnd + " " + timeEnd;
+		var endDate = new Date(end).toString();
+		var overdue = dateOverdue + " " + timeOverdue;
+		var overdueDate = new Date(overdue).toString();
+		var notes = $('textarea#paper_AdditionalNotes').val();
+		google.script.run.withSuccessHandler(paper_WrapupCheckout).withFailureHandler(paper_WrapupCheckout).addToTripPlanLogPaper(e.target.result, partner, beacon, name, startDate, endDate, overdueDate, notes);
+	}
+};
+
+function paper_SubmitForm() {
+	var partner = $('select#partner').val();
+	var beacon = $('select#paper_Beacon').val();
+	var lastName = $('input#paper_LastName').val();
+	var firstName = $('input#paper_FirstName').val();
+	var dateStart = $('input#paper_StartDate').val();
+	var dateEnd = $('input#paper_EndDate').val();
+	var dateOverdue = $('input#paper_OverdueDate').val();
+	var timeStart = $('input#paper_StartTime').val();
+	var timeEnd = $('input#paper_EndTime').val();
+	var timeOverdue = $('input#paper_OverdueTime').val();
+	var files = $('input#paper_Files')[0].files;
+  var file = files[0];
+	var error = "";
+
+	// Check for Missing Fields
+	if (!partner || partner.length === 0) {
+		error += "You Must Select A Partner Location<br>";
+	}
+	if (!beacon || beacon.length === 0) {
+		error += "You Must Select A SPOT Beacon To Checkout<br>";
+	}
+	if (!lastName || lastName.length === 0) {
+		error += "You Must Enter The Party Leader's Last Name<br>";
+	}
+	if (!firstName || firstName.length === 0) {
+		error += "You Must Enter The Party Leader's First Name<br>";
+	}
+	if (!dateStart || dateStart.length === 0 || dateEnd.length === 0 || dateOverdue.length === 0 || timeStart.length === 0 || timeEnd.length === 0 || timeOverdue.length === 0) {
+		error += "A Required Date Or Time Is Missing<br>";
+	}
+	//Check Date Validity
+	dateStart = new Date(dateStart + " " + timeStart);
+	dateEnd = new Date(dateEnd + " " + timeEnd);
+	dateOverdue = new Date(dateOverdue + " " + timeOverdue);
+	if (new Date() > dateEnd) {
+		error += "The Trip Plan Expected Return Date/Time Cannot Be In The Past<br>";
+	}
+	if (dateStart > dateEnd) {
+		error += "The Trip Plan Expected Return Date/Time Cannot Be Before The Expected Departure Date/Time<br>";
+	}
+	if (dateEnd > dateOverdue) {
+		error += "The Trip Plan Overdue Date/Time Cannot Be Before The Expected Return Date/Time<br>";
+	}
+	if (!files || files.length === 0) {
+		error += "A Scanned Copy Of The Trip Plan Must Be Upload<br>";
+	} else if (file.size > 1024 * 1024 * 5) {
+		error += "The File Size Of The Scanned Trip Plan Must Be Less Than 5 MB.<br>";
+	}
+	if (error != "") {
+		showErrorModal(error);
+		return;
+	}
+	$('#paper_fields').hide();
+	$('#checkout_section').hide();
+	$('#checkoutProgress').show();
+  reader.readAsDataURL(file)
+}
+
+function paper_WrapupCheckout(e) {
+	$('#paper_fields').show();
+  $('#checkout_section').show();
+  $('#checkoutProgress').hide();
+	if (e[0] === "OK") {
+    	$('.tabs').tabs('select', 'dashboard');
+    google.script.run.withSuccessHandler(loadAvailableBeaconsMenu).getAvailableBeacons($('select#partner').val());
+	  $('#paperCheckoutForm')[0].reset();
+    showMsgCard('Trip Plan ' + e[1] + ' Sucessfully Activated',false);
+    refreshDashboard();
+	} else {
+    var error = 'Error encountered while activating the trip plan for ' + e[1] + '.<br>Details: ' + e[2] + '<br>Please try again or contact system@ketchikanrescue.org for further assistance if the issue persists.';
+		showErrorModal(error);
+	}
+}
+function showMsgCard(e,error) {
+  	var toastColor = "";
+    if (error == true){
+    var toastColor = "red";
+    }
+    M.toast({
+        html: e,
+        classes: toastColor,
+        displayLength: '8000'
+    })
+}
+function showMsgCardOld(e,error) {
+  	if (error == true){
+    $('#msgCardPanel').removeClass('green').addClass('red');
+    }
+    else
+    {
+    $('#msgCardPanel').removeClass('red').addClass('green');
+    }
+		$('#msgCardText').text(e);
+		$('#msgCard').show();
+    setTimeout(function() {
+			document.getElementById('msgCard').style.display = 'none';
+		}, 10000);
+}
+function showErrorModal(e) {
+	$('#errorModalText').html(e);
+	$('#errorModal').modal('open');
+}
+//DASHBOARD
+function refreshDashboard() {
+	var offset = new Date().getTimezoneOffset();
+	$('#dashboardTable').hide();
+	$('#dashboardNoData').hide();
+	$('#dashboardPreloader').show();
+	google.script.run.withSuccessHandler(createDashboard).getOpenBeacons(offset);
+}
+function generateSpotMap(beacon,startDate){
+	$('#mapModalTitle').text(beacon);
+  	var offset = new Date().getTimezoneOffset();
+google.script.run.withSuccessHandler(generateMapModal).generateSpotMap(beacon,startDate,offset);
+}
+
+function generateMapModal(e){
+  	$('#mapModalElevation').text(e[4]);
+    $("#mapModalImg").attr("src",e[3]);
+		$('#mapModalLocationName').text(e[5]);
+    $('#mapModalLat').text(e[1]);
+		$('#mapModalLong').text(e[2]);
+		$('#mapModalTime').text(e[0]);
+    $('#mapModalAdditional').text(e[6]);
+
+    
+    $('#mapModal').modal('open');
+}
+
+function createDashboard(openBeacons) {
+	$('#dashboard_data').empty();
+	var dashboardData = '';
+	for (var i = 0; i < openBeacons.length; i++) {
+		var startDate = "";
+		if (new Date(openBeacons[i][5]) < new Date(openBeacons[i][4])) {
+			startDate = openBeacons[i][5];
+		} else {
+			startDate = openBeacons[i][4];
+		}
+		dashboardData += '<tr><td id="' + openBeacons[i][1].toString().replace(/\s+/g, '_') + '">';
+    if(openBeacons[i][9] === true){
+       dashboardData += ' <a class="green-text" onclick="generateSpotMap(\''+openBeacons[i][1].toString()+'\',\''+openBeacons[i][6]+'\')">'+openBeacons[i][1].toString()+'</a>';
+    }
+     else{
+       dashboardData += openBeacons[i][1].toString();
+       }
+  dashboardData += '</td><td>' + openBeacons[i][3].toString() + '</td><td>' + openBeacons[i][2] + '</td><td>' + openBeacons[i][5].toString() + '</td><td>';
+		var now = new Date();
+		var returnDate = new Date(openBeacons[i][6]);
+		if (returnDate < now) {
+			dashboardData += '<span class="red-text text-accent-4">';
+		} else {
+			dashboardData += '<span>';
+		}
+		dashboardData += openBeacons[i][6].toString() + '</td><td>';
+		var overdueDate = new Date(openBeacons[i][7]);
+		var overdueDateWarning = new Date(overdueDate.getTime() + 3600000);
+		if (overdueDate < now) {
+			dashboardData += '<span class="red-text text-accent-4">';
+		} else if (overdueDateWarning < now) {
+			dashboardData += '<span class="orange-text text-accent-4">';
+		} else {
+			dashboardData += '<span>';
+		}
+		dashboardData += openBeacons[i][7].toString() + '</span></td><td><a href ="' + openBeacons[i][8].toString() + '">' + openBeacons[i][0].toString() + '</a></td><td><a class="waves-effect waves-light modal-trigger btn-small orange" href="#closeoutModal" onclick="openCloseoutModal(\'' + openBeacons[i][0] + '\',\'' + openBeacons[i][1] + '\',\'' + openBeacons[i][2] + '\')">Checkin</a></td></tr>';
+		//DISABLED UNTIL THIS IS FIXED
+		//dashboardGetMap(openBeacons[i][1], startDate);
+	}
+	if (dashboardData == "") {
+		$('#dashboardNoData').show();
+	} else {
+		$('#dashboard_data').html(dashboardData);
+		$('#dashboardTable').show();
+	}
+	$('#dashboardPreloader').hide();
+	$('#dashboard_timestamp').html("<em>As of " + Date() + "</em>");
+}
+
+function openCloseoutModal(tp, beacon, name) {
+	$("#closeoutModalTripplanId").text(tp);
+	$("#closeoutModalName").text(name);
+	$("#closeoutModalBeacon").text(beacon);
+}
+
+function dashboardCallback(url) {
+	if (!url) return;
+	$('#' + url[0].replace(/\s+/g, '_')).html('<a href="' + url[1] + '">' + url[0] + '</a>');
+}
+
+function dashboardGetMap(beacon, startDate) {
+	google.script.run.withSuccessHandler(dashboardCallback).createSpotMap(beacon, startDate);
+}
+
+var autoRefreshId;
+
+function autoRefreshDashboard() {
+	if (document.getElementById('autoRefresh').checked) {
+		autoRefreshId = setInterval(refreshDashboard, 60000);
+	} else {
+		clearInterval(autoRefreshId);
+	}
+}
+
+$(document).ready(function() {
+	$('.tabs').tabs();
+});
+
+//Materilize CSS Initialization
+$(document).ready(function() {
+	$('select').formSelect();
+});
+
+$(document).ready(function() {
+	$('.collapsible').collapsible();
+});
+
+$(document).ready(function() {
+	$('.datepicker').datepicker({
+		format: 'mm/dd/yyyy',
+		yearRange: 50
+	});
+});
+
+$(document).ready(function() {
+	$('.timepicker').timepicker({
+		twelveHour: false,
+		defaultTime: 'now'
+	});
+});
+
+$(document).ready(function() {
+	$('.modal').modal();
+});
+</script>

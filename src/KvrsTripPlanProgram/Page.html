@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>KVRS Trip Plan System</title>
+    <base target="_blank">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1 0 auto;
+        }
+        *#mapModal {
+  max-height: 90%;
+  max-width: 90%; 
+}
+
+
+
+        
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="nav-extended white">
+            <div class="nav-wrapper"><img class="brand-logo" src="https://dl.dropboxusercontent.com/s/xiaj7ouo8ofrjc5/kvrslogo.png" alt="Ketchikan Volunteer Rescue Squad" width="200">
+            
+                <ul class="right hide-on-med-and-down">
+                    <li><a id="partnerLocationButton" class="waves-effect waves-light btn modal-trigger red" href="#selectPartnerModal">No Partner Location Selected</a></li>
+                </ul>
+            </div>
+            <div class="row center hide-on-large-only">
+              <div class="col s12"><a id="partnerLocationButton" class="waves-effect waves-light btn modal-trigger red" href="#selectPartnerModal">No Partner Location Selected</a></div>
+            </div>
+            <div class="nav-content">
+                <ul class="tabs tabs-transparent indigo darken-4 indicator-orange ">
+                    <li class="tab"><a class="white-text text-darken-1" href="#dashboard">Dashboard</a></li>
+                    <li class="tab"><a class="amber-text text-darken-1" href="#checkout">Beacon Checkout</a></li>
+                    <li class="tab"><a class="light-green-text text-darken-1" href="https://script.google.com/a/ketchikanrescue.org/macros/s/AKfycbxSFkVwnIcI62cER8i1vuuf3Mw5zJL4q56HCl18CRaO8DW7hCM/exec" target="_blank">Enter New Trip Plan</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div id="msgCard" class="row center">
+            <div class="col s12">
+                <div id="msgCardPanel" class="card-panel red">
+                    <span id="msgCardText" class="white-text">This site is for KVRS and Partner Agency/Organization Staff. Please do NOT share this URL with the general public.</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div id="dashboard" class="container">
+            <div class="row center">
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <div><button class="waves-effect waves-light btn submit-btn indigo darken-4" type="button" onclick="refreshDashboard(); return false;">Refresh<i class="material-icons right"></i></button></div>
+                    <div class="switch">
+                        <label> Auto Refresh: Off <input id="autoRefresh" type="checkbox" onclick="autoRefreshDashboard()" checked="checked">
+                            <span class="lever "></span> On </label>
+                    </div>
+                </div>
+            </div>
+            <div id="dashboardPreloader" class="row" style="display:none">
+                <div class="col s12 center-align">
+                    <div class="preloader-wrapper active">
+                        <div class="spinner-layer spinner-red-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p>Loading the freshest data from the KVRS cumulonimbus ... </p>
+                </div>
+            </div>
+            <div id="dashboardNoData" style="display:none">
+                <h5 class="center-align green-text"> No Open Trip Plans</h5>
+                <div class="divider"></div>
+            </div>
+            <table id="dashboardTable">
+                <thead>
+                    <tr>
+                        <th>SPOT Beacon</th>
+                        <th>Partner</th>
+                        <th>Party Leader's Name</th>
+                        <th>Estimated Departure</th>
+                        <th>Estimated Return</th>
+                        <th>Overdue</th>
+                        <th>Trip Plan</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboard_data">
+                    <tr>
+                        <td>Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="row">
+                <div class="col s12">
+                    <h6 id="dashboard_timestamp" class="right-align"></h6>
+                </div>
+            </div>
+        </div>
+        <div id="checkout" class="container">
+            <div id="checkout_section">
+                <div class="row">
+                    <ul class="collapsible">
+                        <li class="active">
+                            <div class="collapsible-header"><i class="material-icons">tablet_android</i>Electronic Trip Plan</div>
+                            <div class="collapsible-body">
+                                <div class="row">
+                                    <div id="electronicTripPlanSection" class="col s12">
+                                        <form class="main" id="electronicCheckoutForm" novalidate="novalidate">
+                                            <div id="electronicFields">
+                                                <div class="row">
+                                                    <div class="input-field col s12">
+                                                        <h5>Select SPOT Beacon & Trip Plan</h5>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="input-field col s8 l4">
+                                                        <select id="electronic_Beacon">
+                                                            <option value="" disabled selected>Select A Partner Location First</option>
+                                                        </select>
+                                                        <label for="electronic_Beacon">KVRS SPOT Beacon</label>
+                                                    </div>
+                                                    <div class="input-field col s4 l2">
+                                                        <button class="waves-effect waves-light btn submit-btn indigo darken-4" type="button" onclick="refreshAvailableBeacons(); return false;">Refresh<i class="material-icons right"></i></button>
+                                                    </div>
+                                                    <div class="input-field col s8 l4">
+                                                        <select id="electronic_TripPlan">
+                                                            <option value="" disabled selected>Loading...</option>
+                                                        </select>
+                                                        <label for="electronic_TripPlan">Select Draft Trip Plans To Activate</label>
+                                                    </div>
+                                                    <div class="input-field col s4 l2">
+                                                        <button class="waves-effect waves-light btn submit-btn indigo darken-4" type="button" onclick="refreshAvailableDraftTripPlans(); return false;">Refresh<i class="material-icons right"></i></button>
+                                                    </div>
+                                                </div>
+                                                <div class="section">
+                                                    <h5>Additional Details</h5>
+                                                    <div class="row">
+                                                        <div class="input-field col s12">
+                                                            <textarea id="electronic_AdditionalNotes" class="materialize-textarea"></textarea>
+                                                            <label for="electronic_AdditionalNotes">Additional Notes</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="input-field col s12">
+                                                        <button class="waves-effect waves-light btn submit-btn red right" type="button" onclick="electronic_VerifyData(); return false;">Continue<i class="material-icons right">send</i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="electronic_verify" style="display:none">
+                                                <div class="section">
+                                                    <div class="row">
+                                                        <div class="col s12">
+                                                            <h5>Trip Plan Confirmation</h5>
+                                                        </div>
+                                                        <div class="col s12">
+                                                            <p><em>Partner Organization Staff:</em> To finalize the beacon check out <em>please verbally confirm</em> the following details with the individual, and then hit submit.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="section">
+                                                        <div class="col s10 offset-s2">Party Leader's Name: <span id="electronic_verify_name"></span></div>
+                                                        <div class="col s10 offset-s2">Assigned SPOT Beacon: <span id="electronic_verify_beacon"></span></div>
+                                                        <div class="col s10 offset-s2">Expected Depature Date & Time: <span id="electronic_verify_start"></span></div>
+                                                        <div class="col s10 offset-s2">Expected Return Date & Time: <span id="electronic_verify_end"></span></div>
+                                                        <div class="col s10 offset-s2">Overdue Date & Time: <span id="electronic_verify_overdue"></span></div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="section">
+                                                        <div class="col s12">
+                                                            <p class="center-align">NOTE: The trip plan is NOT active in the system until you hit the submit button below and see a confirmation page</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="section">
+                                                        <div class="col s6"> <button class="waves-effect waves-light btn submit-btn indigo darken-4  left" type="button" onclick="electronic_VerifyBack(); return false;">Change<i class="material-icons left">arrow_back</i></button></div>
+                                                        <div class="col s6"> <button class="waves-effect waves-light btn submit-btn red right" type="submit" onclick="electronic_SubmitForm(); return false;">Checkout<i class="material-icons right">send</i></button></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="collapsible-header"><i class="material-icons">assignment</i>Paper Trip Plan</div>
+                            <div class="collapsible-body">
+                                <div class="row">
+                                    <div id="paperTripPlanSection" class="col s12">
+                                        <form class="main" id="paperCheckoutForm" novalidate="novalidate">
+                                            <div id="paper_fields">
+                                                <div class="row">
+                                                    <div class="section">
+                                                        <div class="row">
+                                                            <h5>Select SPOT Beacon For Checkout</h5>
+                                                            <div class="input-field col s8">
+                                                                <select id="paper_Beacon">
+                                                                    <option value="" disabled selected>Select A Partner Location First</option>
+                                                                </select>
+                                                                <label for="paper_Beacon">KVRS SPOT Beacon</label>
+                                                            </div>
+                                                            <div class="input-field col s4">
+                                                                <button class="waves-effect waves-light btn submit-btn indigo darken-4" type="button" onclick="refreshAvailableBeacons(); return false;">Refresh<i class="material-icons right"></i></button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <h5>Enter Trip Information</h5>
+                                                            <div class="input-field col s12 m5">
+                                                                <input id="paper_LastName" type="text" class="validate" required="" aria-required="true">
+                                                                <label for="paper_LastName">Party Leader's Last Name</label>
+                                                            </div>
+                                                            <div class="col m1">, </div>
+                                                            <div class="input-field col s12 m6">
+                                                                <input id="paper_FirstName" type="text" class="validate" required="" aria-required="true">
+                                                                <label for="paper_FirstName">Party Leader's First Name</label>
+                                                            </div>
+                                                            <div class="card-panel col s12 m6">
+                                                                <div class="center col s12">Expected Departure</div>
+                                                                <div class=" input-field col s6">
+                                                                    <input id="paper_StartDate" type="text" name="StartDate" class="datepicker" required="" aria-required="true">
+                                                                    <label for="paper_StartDate">Date</label>
+                                                                </div>
+                                                                <div class="input-field col s6">
+                                                                    <input id="paper_StartTime" type="text" name="StartDate" class="timepicker" required="" aria-required="true">
+                                                                    <label for="paper_StartTime">Time</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-panel col s12 m6">
+                                                                <div class="center col s12">Expected Return</div>
+                                                                <div class="input-field col s6">
+                                                                    <input id="paper_EndDate" type="text" class="datepicker" required="" aria-required="true">
+                                                                    <label for="paper_EndDate">Date</label>
+                                                                </div>
+                                                                <div class="input-field col s6">
+                                                                    <input id="paper_EndTime" type="text" class="timepicker">
+                                                                    <label for="paper_EndTime">Time</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-panel col s12">
+                                                                <div class="center col s12">Overdue Deadline</div>
+                                                                <div class=" input-field col s8 ">
+                                                                    <input id="paper_OverdueDate" type="text" class="datepicker" required="" aria-required="true">
+                                                                    <label for="paper_OverdueDate">Date</label>
+                                                                </div>
+                                                                <div class="input-field col s4 ">
+                                                                    <input id="paper_OverdueTime" type="text" class="timepicker">
+                                                                    <label for="paper_OverdueTime">Time</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="section">
+                                                        <h5>Scanned Copy of Trip Plan</h5>
+                                                        <a href="https://drive.google.com/file/d/1vCcQw79DTTHvBkwO1tacNxCWM1vs3Pb1/view?usp=sharing">Download Printable Blank Trip Plan Form</a>
+                                                        <div class="file-field input-field col s12">
+                                                            <div class="btn orange">
+                                                                <span>Trip Plan File <i class="material-icons left">assignment</i></span>
+                                                                <input id="paper_Files" type="file">
+                                                            </div>
+                                                            <div class="file-path-wrapper">
+                                                                <input class="file-path validate" type="text" placeholder="Select a file on your computer">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="section">
+                                                    <h5>Additional Details</h5>
+                                                    <div class="row">
+                                                        <div class="input-field col s12">
+                                                            <textarea id="paper_AdditionalNotes" class="materialize-textarea"></textarea>
+                                                            <label for="paper_AdditionalNotes">Additional Notes</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="input-field col s12">
+                                                        <button class="waves-effect waves-light btn submit-btn red right" type="submit" onclick="paper_SubmitForm(); return false;">Checkout<i class="material-icons right">send</i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                </div>
+                </li>
+                </ul>
+            </div>
+            <div id="checkoutProgress" style="display:none">
+              <div class="row"></div>
+                <div class="row center">
+                    <div class="col s12">
+                        <div class="preloader-wrapper big active">
+                            <div class="spinner-layer spinner-blue">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                            <div class="spinner-layer spinner-red">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                            <div class="spinner-layer spinner-yellow">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                            <div class="spinner-layer spinner-green">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <p>Finding the folder to put this plan in ... this should only take a second or two ...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    <footer class="page-footer indigo darken-4">
+        <div class="container">
+            <div class="row">
+                <div class="col s12">
+                    <h5 class="center-align">Ketchikan Volunteer Rescue Squad <br>A Non-profit Corporation<br>Box 5786 Ketchikan, Alaska 99901 <br>(907) 225-9010 Phone || (907) 247-5523 Fax <br><a href="mailto:contact@ketchikanrescue.org">contact@ketchkanrescue.org</a>
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </footer>
+        <!-- Modal Structure -->
+
+    <div id="selectPartnerModal" class="modal">
+        <div class="modal-content">
+            <h4>Select Locaton</h4>
+            <div class="row">
+                <div class="input-field col s12 black-text">
+                    <select id="partner" name="Partner">
+                        <option value="" disabled selected>Loading...</option>
+                    </select>
+                    <label for="partner">Active Location</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-green btn-flat" onClick="selectPartner()">Continue</a>
+        </div>
+    </div>
+   <!-- Modal Structure -->
+    <div id="mapModal" class="modal">
+        <div class="modal-content">
+            <h4><span id="mapModalTitle"></span> SPOT Beacon Details</h4>
+                <div class="row">
+                <div class="col l6 center">
+                  <img id="mapModalImg" src="#"/></div>
+                <div class="col l6 center">
+                  <h6>Last SPOT Beacon Position Recieved</h6>
+                  <p>Received At: <span id="mapModalTime"></span></p>
+                  <p>Nearest Location: <span id="mapModalLocationName"></span></p> 
+                  <p>Latitute: <span id="mapModalLat"></span> Longitude: <span id="mapModalLong"></span></p>
+                  <p>Map Elevation: <span id="mapModalElevation"></span> Meters</p>
+                  <p>Additional Positions Available: <span id="mapModalAdditional"></span></p>
+
+                </div>
+              </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat">Close</a>
+        </div>
+    </div>
+    <!-- Modal Structure -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <h4>Error</h4>
+              <div id="errorModalText"></div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat">Close</a>
+        </div>
+    </div>
+    <!-- Modal Structure -->
+    <div id="closeoutModal" class="modal">
+        <form id="closeoutForm">
+            <div class="modal-content" id="closeoutModalBody">
+                <h4>Closeout Beacon?</h4>
+                <p>Are you sure you want to closeout trip plan <span id="closeoutModalTripplanId"></span> (<span id="closeoutModalName"></span>) and checkin beacon <span id="closeoutModalBeacon"></span>? </p>
+                <div class="input-field col s12">
+                    <textarea id="closeout_AdditionalNotes" class="materialize-textarea"></textarea>
+                    <label for="closeout_AdditionalNotes">Additional Notes</label>
+                </div>
+                <p>
+                    <label>
+                        <input id="closeoutModalCancel" type="checkbox" />
+                        <span>Created by error (Do not include in program statistics).</span>
+                    </label>
+                </p>
+            </div>
+        </form>
+        <div class="modal-content row center-align" id="closeoutModalProgress" style="display:none">
+            <div class=" col s12 blue-grey-text darken-1">
+                <div class="preloader-wrapper active">
+                    <div class="spinner-layer spinner-red-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+                <div>...shuffling selected incident papers between the drawers in the KVRS cumulonimbus</div>
+            </div>
+        </div>
+        <div id="closeoutModalFooter" class="modal-footer">
+            <a class="modal-close waves-effect waves-green btn-flat">Cancel</a>
+            <a class="waves-effect waves-green btn-flat" onclick="closeoutSubmit()">Confirm</a>
+        </div>
+    </div>
+    <?!= include('JavaScript'); ?>
+</body>
+
+</html>
