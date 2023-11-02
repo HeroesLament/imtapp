@@ -1,4 +1,5 @@
 function syncSpotData() {
+  try {
   var ss = SpreadsheetApp.openById(SystemSettings.SPOT_INCIDENT_MAPPER_ID);
   var mapper = ss.getSheets()[1];
   var mapperOldDataColumn = mapper.getLastColumn();
@@ -21,9 +22,15 @@ function syncSpotData() {
     var incidentLog = activeIncidents[i][1]
     var incidentName = activeIncidents[i][0]
     console.log("Starting createIncidentPositionLog For Incident:" + incidentName)
-    createIncidentPositionLog(incidentLog, incidentName);
+    span.addEvent('Starting createIncidentPositionLog for incident' + incidentName)
+    createIncidentPositionLog(incidentLog, incidentName)
     console.log("Completed createIncidentPositionLog For Incident:" + incidentName)
+    span.addEvent('Completed createIncidentPositionLog for incident' + incidentName)
   }
+  } catch (error) {
+    span.addEvent('SPOT Incident Mapper failed to update');
+  }
+  span.addEvent('SPOT Incident Mapper updated successfully');
 }
 
 function createIncidentPositionLog(incidentSheet, incidentName) {

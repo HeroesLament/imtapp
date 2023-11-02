@@ -1,7 +1,15 @@
 function memberUpdate(logSheetId, memberName, memberTeam, memberSpot, time, date, leader) {
+    const span = OpenTelemetryGASExporter.createSpan('getIncidentDashboardList');
+    span.setAttribute('logSheetId', logSheetId);
+    span.setAttribute('memberName', memberName);
+    span.setAttribute('memberTeam', memberTeam);
+    span.setAttribute('memberSpot', memberSpot);
+    span.setAttribute('time', time);
+    span.setAttribute('date', date);
+    span.setAttribute('leader', leader);
     try {
-
         var activeMembers = getMemberStatusList(logSheetId);
+        span.addEvent('Member status list retrieved', { length: activeMembers.length });
         console.log("memberSpot: " + memberSpot);
         var activeSpots = []
         for (var row = 0; row < activeMembers.length; row++) {
@@ -138,11 +146,14 @@ notes += "Updated at " + dtg + " by " + user +".";
         sheet.getRange((sheetLastRow + 1), (colNotes + 1)).setValue(notes);
         //trigger a update of the mapper incase this is a back date assignment.
         syncSpotData();
-        var msg = [true, memberName];
-        return msg;
+        span.addEvent('Member updated successfully', {memberName: memberName});
+        OpenTelemetryGASExporter.endSpan(span);
+        return [true, memberName];
     } catch (error) {
+        span.setAttribute('error', true);
+        span.addEvent('Error updating member', {error: error.toString()});
+        OpenTelemetryGASExporter.endSpan(span);
         console.log("Update Error: " + error);
-        var msg = [false, error.toString()];
-        return msg;
+        return [false, error.toString()];
     }
 }
