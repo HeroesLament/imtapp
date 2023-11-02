@@ -31,9 +31,11 @@ function syncSpotData() {
   }
   span.addEvent('SPOT Incident Mapper updated successfully');
   OpenTelemetryGASExporter.endSpan(span);
+  OpenTelemetryGASExporter.export(span);
   } catch (error) {
     span.addEvent('SPOT Incident Mapper failed to update');
     OpenTelemetryGASExporter.endSpan(span);
+    OpenTelemetryGASExporter.export(span);
   }
 
 }
