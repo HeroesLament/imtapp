@@ -145,7 +145,7 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
           endRowIndex: exportDataLen + 1,
           endColumnIndex: exportDataWidth
         });
-        valuesToSet.push(...exportData);
+        Array.prototype.push.apply(valuesToSet, exportData);
 
         span.addEvent('Start writing data to sheet', {
           'sheetName': exportSheet.getName(),
