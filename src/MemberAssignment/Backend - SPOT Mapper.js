@@ -41,7 +41,7 @@ function syncSpotData() {
 }
 
 function createIncidentPositionLog(incidentSheet, incidentName) {
-  const span = OpenTelemetryGASExporter.createSpan('syncSpotData');
+  const span = OpenTelemetryGASExporter.createSpan('createIncidentPositionLog');
   try {
     console.log("START: createIncidentPositionLog for" + incidentSheet)
 
@@ -67,8 +67,20 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
     
     var incidentEndDate;
     for (var row = 0; row < sheetData.length; row++) {
+      span.addEvent('Checking row for incidentSheet match', {
+        'rowIndex': row,
+        'incidentSheetValueAtRow': sheetData[row][colIncidentFolderId],
+        'incidentSheet': incidentSheet
+      });
+    
       if (sheetData[row][colIncidentFolderId] == incidentSheet) {
         incidentEndDate = sheetData[row][colIncidentEndDate];
+    
+        span.addEvent('Match found', {
+          'rowIndex': row,
+          'incidentEndDate': incidentEndDate
+        });
+    
         break;
       }
     }
