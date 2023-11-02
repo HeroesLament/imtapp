@@ -1,5 +1,5 @@
 function memberUpdate(logSheetId, memberName, memberTeam, memberSpot, time, date, leader) {
-    const span = OpenTelemetryGASExporter.createSpan('getIncidentDashboardList');
+    const span = OpenTelemetryGASExporter.createSpan('updateMember');
     span.setAttribute('logSheetId', logSheetId);
     span.setAttribute('memberName', memberName);
     span.setAttribute('memberTeam', memberTeam);
