@@ -46,65 +46,42 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
 
     var ss = SpreadsheetApp.openById(SystemSettings.IMS_INCIDENT_LOG_SHEET_ID);
     var sheet = ss.getSheetByName("IMS Incident Log");
-    var sheetLastRow = sheet.getLastRow();
-    var sheetLastColumn = sheet.getLastColumn();
-    var sheetHeaders = sheet.getRange(1, 1, 1, sheetLastColumn).getValues();
-    var sheetHeadersLen = sheetHeaders[0].length;
-    var sheetData = sheet.getRange(2, 1, (sheetLastRow - 1), sheetLastColumn).getValues();
-    var sheetDataLen = sheetData.length;
+    var sheetData = sheet.getDataRange().getValues();
+    var sheetHeaders = sheetData[0];
+    var sheetData = sheet.getRange(2, 1, (sheet.getLastRow() - 1), sheet.getLastColumn()).getValues();
     var incidents = [];
-    for (var hrow = 0; hrow < sheetHeadersLen; hrow++) {
-      if (sheetHeaders[0][hrow] == "INCIDENT_MEMBER_DATA_ID") {
-        var colIncidentFolderId = hrow;
-        continue;
-      };
-
-      if (sheetHeaders[0][hrow] == "INCIDENT_END_DATE") {
-        var colIncidentEndDate = hrow;
-        continue;
-      };
+    var colIncidentFolderId, colIncidentEndDate;
+    
+    for (var i = 0; i < sheetHeaders.length; i++) {
+      if (sheetHeaders[i] == "INCIDENT_MEMBER_DATA_ID") {
+        colIncidentFolderId = i;
+      } else if (sheetHeaders[i] == "INCIDENT_END_DATE") {
+        colIncidentEndDate = i;
+      }
     }
-    for (var row = 0; row < sheetDataLen; row++) {
-      var incidentEndDate;
+    
+    var incidentEndDate;
+    for (var row = 0; row < sheetData.length; row++) {
       if (sheetData[row][colIncidentFolderId] == incidentSheet) {
         incidentEndDate = sheetData[row][colIncidentEndDate];
         break;
       }
     }
-    if (incidentEndDate == "") {
-      console.log("Incident is ongoing, checking for  new SPOT Data ")
+
+    if (!incidentEndDate) {
+      console.log("Incident is ongoing, checking for new SPOT Data");
 
       var filterEnd = new Date();
-      // var activeBeacons = getIncidentBeaconList(incidentSheet);
       var activeBeacons = getIncdentAssignmentList(incidentSheet, true);
       console.log("activeBeacons: " + activeBeacons)
-      //console.log("exportPositionLogToFusionTables ActiveBeacons: "+activeBeacons)
-      var activeBeaconsLen = activeBeacons.length;
       var teamList = [];
-      // This still can't handle beacon # changes!
-
-
-      for (var row = 0; row < activeBeaconsLen; row++) {
+      for (var row = 0; row < activeBeacons.length; row++) {
         if (activeBeacons[row][5] == "" || activeBeacons[row][5] == undefined) {
           teamList.push([activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], new Date(), activeBeacons[row][1]]);
-        }
-        else {
+        } else {
           teamList.push([activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], activeBeacons[row][5], activeBeacons[row][1]]);
-
-
         }
       }
-      console.log()
-
-
-      /*  for (var row = 0; row < activeBeaconsLen; row++) {
-            if (activeBeacons[row][2] == "" || activeBeacons[row][2] == "undefined" || activeBeacons[row][2] == "null") continue;
-            //This needs to be fixed to check for acutal endtimes to enable multi day searches....
-            var filterStart = getBeaconStartTime(incidentSheet, activeBeacons[row][0], activeBeacons[row][2])
-            teamList.push([activeBeacons[row][0], activeBeacons[row][2], filterStart, new Date(), activeBeacons[row][1]]);
-            //name || beacon filter || filter start || filter end
-            //  console.log("exportPositionLogToFusionTables Team List: "+teamList)
-        }*/
 
       var logSs = SpreadsheetApp.openById(SystemSettings.SPOT_SPREADSHEET_ID);
       var logSheet = logSs.getSheets()[1];
@@ -112,66 +89,95 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
       var logLastColumn = logSheet.getLastColumn();
       var exportSs = SpreadsheetApp.openById(incidentSheet);
       var exportSheet = exportSs.getSheets()[1];
-      var exportLastRow = exportSheet.getLastRow();
-      var exportLastColumn = exportSheet.getLastColumn();
       var exportData = [];
-      if (logLastRow != 1) {
+      if (logLastRow > 1) {
         var logData = logSheet.getRange(1, 1, logLastRow, logLastColumn).getValues();
-        var logDataLen = logData.length;
-        //console.log("exportPositionLogToFusionTables logLastData: "+logDataLen)
-        var teamListLen = teamList.length;
-        //console.log("Point 1")
-        for (var trow = 0; trow < teamListLen; trow++) {
+        for (var trow = 0; trow < teamList.length; trow++) {
           var beaconFilter = teamList[trow][1];
           var filterStart = teamList[trow][2];
           var filterEnd = teamList[trow][3];
-          console.log("filterEnd: " + filterEnd)
-          //  console.log("exportPositionLogToFusionTables Beacon Filter from team list" + beaconFilter);
-          for (var row = 1; row < logDataLen; row++) {
+          for (var row = 1; row < logData.length; row++) {
             var exportDataRow = [];
-            var canidateBeacon = logData[row][2].toString();
-            if ((beaconFilter != "") && (row != 0) && (beaconFilter.indexOf(canidateBeacon) === -1)) continue;
-            if ((filterStart != "") && (row != 0) && (new Date(filterStart) > new Date(logData[row][15]))) {
-              // console.log("exportPositionLogToFusionTables Row "+row+" Data Is Older That Start Filter");
-              continue;
-            }
-            //console.log("point 2")
-            if ((filterEnd != "") && (row != 0) && (new Date(filterEnd) < new Date(logData[row][15]))) continue;
-            // console.log("exportPositionLogToFusionTables"+ logData[row]);
+            var candidateBeacon = logData[row][2].toString();
+            if ((beaconFilter != "") && (beaconFilter.indexOf(candidateBeacon) === -1)) continue;
+            if ((filterStart != "") && (new Date(filterStart) > new Date(logData[row][15]))) continue;
+            if ((filterEnd != "") && (new Date(filterEnd) < new Date(logData[row][15]))) continue;
             for (var i = 0; i < logData[row].length; i++) {
               exportDataRow.push(logData[row][i]);
-              //console.log(logData[row][i].toString());
             }
-            exportDataRow.push(teamList[trow][4], teamList[trow][0])
-            //console.log("exportPositionLogToFusionTables Export Data Row"+exportDataRow);
+            exportDataRow.push(teamList[trow][4], teamList[trow][0]);
             exportData.push(exportDataRow);
           }
         }
-        // console.log("point 3")
-        //  console.log("Export Data Row"+exportData);
-        var exportDataLen = exportData.length;
-        // console.log("Export Data Length: " + exportDataLen)
-        //console.log("point 4")
-        if (exportDataLen > 0) {
-          var exportLastRow = exportSheet.getLastRow();
-          var exportLastColumn = exportSheet.getLastColumn();
-          //console.log("point 4a"+exportLastRow)
-          if (exportLastRow > 1) {
-            //console.log("point 5")
-            exportSheet.getRange(2, 1, (exportLastRow - 1), exportLastColumn).clearContent();
-          }
-          var exportDataWidth = exportData[0].length;
-          // console.log("data found for incident width: "+exportDataWidth)
-          exportSheet.getRange(2, 1, exportDataLen, exportDataWidth).setValues(exportData);
+      }
+
+      var exportDataLen = exportData.length;
+      if (exportDataLen > 0) {
+        var exportLastRow = exportSheet.getLastRow();
+        var exportLastColumn = exportSheet.getLastColumn();
+        var exportDataWidth = exportData[0].length;
+        var rangesToClear = [];
+        var rangesToSet = [];
+        var valuesToSet = [];
+
+        if (exportLastRow > 1) {
+          rangesToClear.push({
+            sheetId: exportSheet.getSheetId(),
+            startRowIndex: 1,
+            endRowIndex: exportLastRow - 1,
+            startColumnIndex: 0,
+            endColumnIndex: exportLastColumn
+          });
+        }
+
+        rangesToSet.push({
+          sheetId: exportSheet.getSheetId(),
+          startRowIndex: 1,
+          startColumnIndex: 0,
+          endRowIndex: exportDataLen + 1,
+          endColumnIndex: exportDataWidth
+        });
+        valuesToSet.push(...exportData);
+        
+        if (rangesToClear.length > 0) {
+          Sheets.Spreadsheets.batchUpdate({
+            requests: [{
+              updateCells: {
+                rows: [],
+                fields: "*",
+                range: {
+                  sheetId: rangesToClear[0].sheetId,
+                  startRowIndex: rangesToClear[0].startRowIndex,
+                  endRowIndex: rangesToClear[0].endRowIndex,
+                  startColumnIndex: rangesToClear[0].startColumnIndex,
+                  endColumnIndex: rangesToClear[0].endColumnIndex
+                }
+              }
+            }]
+          }, exportSs.getId());
+        }
+
+        if (rangesToSet.length > 0) {
+          Sheets.Spreadsheets.batchUpdate({
+            requests: [{
+              updateCells: {
+                rows: valuesToSet.map(row => ({ values: row.map(cell => ({ userEnteredValue: { stringValue: cell } })) })),
+                fields: "*",
+                range: rangesToSet[0]
+              }
+            }]
+          }, exportSs.getId());
         }
       }
     }
+
     syncIncidentMapper(incidentSheet, incidentName)
     console.log("COMPLETE: createIncidentPositionLog for" + incidentSheet)
   } catch (error) {
     console.log("ERROR: createIncidentPositionLog:" + error);
   }
 }
+
 
 function syncIncidentMapper(incidentSheet, incidentName) {
   try {
