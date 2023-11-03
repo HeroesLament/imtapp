@@ -193,6 +193,12 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
           }, exportSs.getId());
         }
       }
+    } else {
+      console.log("Incident has ended or the end date is set");
+      span.addEvent('Incident position log update skipped', {
+        'reason': 'Incident has ended or the end date is set',
+        'incidentEndDate': incidentEndDate
+      });
     }
     span.addEvent('Start synchronizing data', {
       'incidentSheetId': incidentSheet
