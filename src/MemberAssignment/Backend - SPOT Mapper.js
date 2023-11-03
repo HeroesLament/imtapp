@@ -103,11 +103,11 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
         if (activeBeacons[row][5] == "" || activeBeacons[row][5] == undefined) {
           var newData = [activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], new Date(), activeBeacons[row][1]];
           teamList.push(newData);
-          span.addEvent('Adding to team list (new date)', { 'row': row, 'newData': newData });
+          //span.addEvent('Adding to team list (new date)', { 'row': row, 'newData': newData });
         } else {
           var existingData = [activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], activeBeacons[row][5], activeBeacons[row][1]];
           teamList.push(existingData);
-          span.addEvent('Adding to team list (existing date)', { 'row': row, 'existingData': existingData });
+          //span.addEvent('Adding to team list (existing date)', { 'row': row, 'existingData': existingData });
         }
       }
       
@@ -144,6 +144,7 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
             }
       
             if (isNaN(filterStart.getTime()) || isNaN(filterEnd.getTime()) || isNaN(logDate.getTime())) {
+              console.log("Invalid date detected");
               span.addEvent('Invalid date detected', {
                 'rowIndex': row,
                 'filterStart': filterStart.toISOString(),
@@ -161,13 +162,14 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
             exportData.push(exportDataRow);
           }
         }
-      
+        console.log("Finished processing log data");
         span.addEvent('Finished processing log data', { 'exportedRowCount': exportData.length });
       }
       
 
       var exportDataLen = exportData.length;
       if (exportDataLen > 0) {
+        console.log("Data ready for export");
         span.addEvent('Data ready for export', { 'exportDataLength': exportDataLen });
         var exportLastRow = exportSheet.getLastRow();
         var exportLastColumn = exportSheet.getLastColumn();
@@ -194,7 +196,7 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
           endColumnIndex: exportDataWidth
         });
         Array.prototype.push.apply(valuesToSet, exportData);
-
+        console.log("Start writing data to sheet");
         span.addEvent('Start writing data to sheet', {
           'sheetName': exportSheet.getName(),
           'range': 'A2:' + exportSheet.getRange(2, 1, exportDataLen, exportDataWidth).getA1Notation(),
