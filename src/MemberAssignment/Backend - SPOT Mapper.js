@@ -128,12 +128,12 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
           var filterStart = new Date(teamList[trow][2]);
           var filterEnd = new Date(teamList[trow][3]);
           
-          span.addEvent('Processing team', {
-            'teamIndex': trow,
-            'beaconFilter': beaconFilter,
-            'filterStart': filterStart.toISOString(),
-            'filterEnd': filterEnd.toISOString()
-          });
+          //span.addEvent('Processing team', {
+          //  'teamIndex': trow,
+          //  'beaconFilter': beaconFilter,
+          //  'filterStart': filterStart.toISOString(),
+          //  'filterEnd': filterEnd.toISOString()
+          //});
       
           for (var row = 1; row < logData.length; row++) {
             var candidateBeacon = logData[row][2].toString();
