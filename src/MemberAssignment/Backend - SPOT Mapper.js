@@ -88,18 +88,29 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
 
       var filterEnd = new Date();
       var activeBeacons = getIncdentAssignmentList(incidentSheet, true);
+      if (!Array.isArray(activeBeacons)) {
+        span.addEvent('Error: activeBeacons is not an array', { 'activeBeacons': activeBeacons });
+        return;
+      }
+      span.addEvent('Retrieved active beacons', { 'activeBeaconsCount': activeBeacons.length });
       var teamList = [];
       console.log("activeBeacons: " + activeBeacons)
       span.addEvent('Start filtering and processing data', {
         'activeBeaconsCount': activeBeacons.length
       });
+      span.addEvent('Starting team list construction', { 'activeBeaconsCount': activeBeacons.length });
       for (var row = 0; row < activeBeacons.length; row++) {
         if (activeBeacons[row][5] == "" || activeBeacons[row][5] == undefined) {
-          teamList.push([activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], new Date(), activeBeacons[row][1]]);
+          var newData = [activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], new Date(), activeBeacons[row][1]];
+          teamList.push(newData);
+          span.addEvent('Adding to team list (new date)', { 'row': row, 'newData': newData });
         } else {
-          teamList.push([activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], activeBeacons[row][5], activeBeacons[row][1]]);
+          var existingData = [activeBeacons[row][0], activeBeacons[row][2], activeBeacons[row][4], activeBeacons[row][5], activeBeacons[row][1]];
+          teamList.push(existingData);
+          span.addEvent('Adding to team list (existing date)', { 'row': row, 'existingData': existingData });
         }
       }
+      
 
       var logSs = SpreadsheetApp.openById(SystemSettings.SPOT_SPREADSHEET_ID);
       var logSheet = logSs.getSheets()[1];
@@ -110,27 +121,54 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
       var exportData = [];
       if (logLastRow > 1) {
         var logData = logSheet.getRange(1, 1, logLastRow, logLastColumn).getValues();
+        span.addEvent('Fetched log data', { 'rowCount': logLastRow, 'columnCount': logLastColumn });
+      
         for (var trow = 0; trow < teamList.length; trow++) {
           var beaconFilter = teamList[trow][1];
-          var filterStart = teamList[trow][2];
-          var filterEnd = teamList[trow][3];
+          var filterStart = new Date(teamList[trow][2]);
+          var filterEnd = new Date(teamList[trow][3]);
+          
+          span.addEvent('Processing team', {
+            'teamIndex': trow,
+            'beaconFilter': beaconFilter,
+            'filterStart': filterStart.toISOString(),
+            'filterEnd': filterEnd.toISOString()
+          });
+      
           for (var row = 1; row < logData.length; row++) {
-            var exportDataRow = [];
             var candidateBeacon = logData[row][2].toString();
-            if ((beaconFilter != "") && (beaconFilter.indexOf(candidateBeacon) === -1)) continue;
-            if ((filterStart != "") && (new Date(filterStart) > new Date(logData[row][15]))) continue;
-            if ((filterEnd != "") && (new Date(filterEnd) < new Date(logData[row][15]))) continue;
-            for (var i = 0; i < logData[row].length; i++) {
-              exportDataRow.push(logData[row][i]);
+            var logDate = new Date(logData[row][15]);
+            
+            if ((beaconFilter !== "") && !beaconFilter.includes(candidateBeacon)) {
+              continue;
             }
-            exportDataRow.push(teamList[trow][4], teamList[trow][0]);
+      
+            if (isNaN(filterStart.getTime()) || isNaN(filterEnd.getTime()) || isNaN(logDate.getTime())) {
+              span.addEvent('Invalid date detected', {
+                'rowIndex': row,
+                'filterStart': filterStart.toISOString(),
+                'filterEnd': filterEnd.toISOString(),
+                'logDate': logData[row][15]
+              });
+              continue;
+            }
+            
+            if (filterStart > logDate || filterEnd < logDate) {
+              continue;
+            }
+      
+            var exportDataRow = [...logData[row], teamList[trow][4], teamList[trow][0]];
             exportData.push(exportDataRow);
           }
         }
+      
+        span.addEvent('Finished processing log data', { 'exportedRowCount': exportData.length });
       }
+      
 
       var exportDataLen = exportData.length;
       if (exportDataLen > 0) {
+        span.addEvent('Data ready for export', { 'exportDataLength': exportDataLen });
         var exportLastRow = exportSheet.getLastRow();
         var exportLastColumn = exportSheet.getLastColumn();
         var exportDataWidth = exportData[0].length;
@@ -192,6 +230,8 @@ function createIncidentPositionLog(incidentSheet, incidentName) {
             }]
           }, exportSs.getId());
         }
+      } else {
+        span.addEvent('No data to write to export sheet');
       }
     } else {
       console.log("Incident has ended or the end date is set");
