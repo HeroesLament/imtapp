@@ -62,8 +62,7 @@ function completeIncident(incidentFolderId, endDate) {
 
       }
       SystemTools.forceUpdate(); // Update the Filter Mapper
-      // Remove Incident Waypoints from Incident Mapper Spreadsheet
-      const result = incidentMapperUpdate(incidentName);
+      // Remove Incident Waypoints from Incident Mapper Spreadsheet 
       const rowIndexes = findRowsForIncident(incidentName);
       const deletionRequests = createDeletionRequests(rowIndexes);
       const response = batchUpdate(SystemSettings.SPOT_INCIDENT_MAPPER_ID, deletionRequests);
@@ -78,7 +77,7 @@ function completeIncident(incidentFolderId, endDate) {
   }
 }
 
-function findRowsForIncident(incidentName, sheet) {
+function findRowsForIncident(incidentName) {
   const sheet = SpreadsheetApp.openById(SystemSettings.SPOT_INCIDENT_MAPPER_ID).getSheets()[1]; // Open Incident Mapper Spreadsheet
   const dataRange = sheet.getRange('C11:C1000').getValues(); // Creates an array of RowData enumerating the Folder/Incident name
   let rowIndexes = [];
@@ -121,43 +120,32 @@ function batchUpdate(spreadsheetId, requests) {
   Logger.log(response.getContentText());
 }
 
-function shiftRowsUp(sheet, startRow, endRow, numRowsShifted) {
-  // Read data into a JavaScript array (in-memory)
-  var range = sheet.getRange(startRow + 1, 1, endRow - startRow, sheet.getLastColumn());
-  var data = range.getValues();
+function createUpdateCellsRequest(rowId) {
+  const sheetId = 2; // Hardcoded to always target sheet 2
+  const startColumn = 2; // Hardcoded to always start from column C (index 2)
+  const endColumn = 51; // Hardcoded to always end at column AY (index 51)
 
-  // Manipulate the array to remove specific rows (if needed)
-  // For example, if rows 11, 14, 19 are removed, adjust the data array accordingly
-
-  // Write the data back to the sheet, shifted up
-  sheet.getRange(startRow - numRowsShifted + 1, 1, data.length, data[0].length).setValues(data);
-
-  // Optionally, clear any remaining rows that are now empty due to the shift
-  var rowsToClear = endRow - (startRow - numRowsShifted + 1 + data.length);
-  if (rowsToClear > 0) {
-    sheet.getRange(endRow - rowsToClear + 1, 1, rowsToClear, sheet.getLastColumn()).clearContent();
-  }
-}
-
-function incidentMapperUpdate(incidentName) {
-  try {
-    const sheet = SpreadsheetApp.openById(SystemSettings.SPOT_INCIDENT_MAPPER_ID).getSheets()[1];
-    const rowIndexes = findRowsForIncident(incidentName, sheet);
-    let requests = createDeletionRequests(rowIndexes);
-
-    // Calculate the number of rows to be shifted and add shift requests
-    const numRowsShifted = rowIndexes.length;
-    const shiftRequests = createShiftRequests(sheet, numRowsShifted, rowIndexes);
-    requests = requests.concat(shiftRequests);
-
-    // Perform the batch update
-    const response = batchUpdate(SystemSettings.SPOT_INCIDENT_MAPPER_ID, requests);
-
-    var msg = [true, incidentName];
-    return msg;
-  } catch (error) {
-    console.log("Error in incidentMapperUpdate for " + incidentName + ": " + error);
-    var msg = [false, error.toString()];
-    return msg;
-  }
+  return {
+    "updateCells": {
+      "range": {
+        "sheetId": sheetId,
+        "startRowIndex": rowId,
+        "endRowIndex": rowId + 1, // endRowIndex is exclusive
+        // Exclusive endRowIndex: This means that the endRowIndex is not included in the range.
+        // For example, if startRowIndex is 10 and endRowIndex is 11, the operation will affect only the row at index 10.
+        // (which corresponds to the 11th row in the sheet, as the index is 0-based).
+        // The row at index 11 (the 12th row in the sheet) is not included in this range.
+        "startColumnIndex": startColumn,
+        "endColumnIndex": endColumn
+      },
+      "rows": [
+        {
+          "values": new Array(endColumn - startColumn).fill({
+            "userEnteredValue": null // Set each cell's value to null
+          })
+        }
+      ],
+      "fields": "userEnteredValue" // Only the userEnteredValue will be updated
+    }
+  };
 }
