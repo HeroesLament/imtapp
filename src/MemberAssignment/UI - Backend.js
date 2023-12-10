@@ -4,9 +4,9 @@ function createVolRoster() {
 }
 
 function getOpenIncidents() {
-    var incidents = SharedFunctions.getIncidentList("ENABLE_ASSIGNMENT", true, "INCIDENT_MEMBER_DATA_ID");
-    console.log(incidents);
-    return incidents;
+    var incidents = SharedFunctions.getIncidentList("ENABLE_ASSIGNMENT", true, "INCIDENT_MEMBER_DATA_ID")
+    console.log(incidents)
+    return incidents
 }
 
 function getIMTPositions() {
@@ -587,7 +587,7 @@ function getMembersAssignmentList(logSheetId) {
     }
 }
 
-function getIncdentAssignmentList(logSheetId,spotOnly) {
+function oldGetIncdentAssignmentList(logSheetId,spotOnly) {
 //incudes checkout times
     console.log("START: getIncdentAssignmentList")
     var ss = SpreadsheetApp.openById(logSheetId);
@@ -688,12 +688,80 @@ function getIncdentAssignmentList(logSheetId,spotOnly) {
             if (a[4] > b[4]) return 1;
             if (a[4] < b[4]) return -1;
         })
-        //console.log(activeMembers)
-console.log(dashboardList)
-        //console.log("currentlyIn: " + activeMembers)
+        console.log("currentlyIn: " + activeMembers)
+        console.log(dashboardList)
         console.log("COMPLETE: getIncdentAssignmentList")
         return dashboardList
     } else {
         return false
+    }
+}
+
+function getIncdentAssignmentList(logSheetId, spotOnly) {
+    console.log("START: getIncdentAssignmentList");
+    var ss = SpreadsheetApp.openById(logSheetId);
+    var sheet = ss.getSheets()[0];
+    var sheetLastRow = sheet.getLastRow();
+    if (sheetLastRow == 1) return false;
+    var sheetLastColumn = sheet.getLastColumn();
+    var sheetHeaders = sheet.getRange(1, 1, 1, sheetLastColumn).getValues()[0];
+
+    // Create a map of column names to their indices
+    var colMap = sheetHeaders.reduce((map, header, index) => {
+        map[header] = index;
+        return map;
+    }, {});
+
+    if (sheetLastRow == 1) return [];
+    var sheetData = sheet.getRange(2, 1, (sheetLastRow - 1), sheetLastColumn).getValues();
+    sheetData.sort(sortFunctionAssignByDate);
+
+    function sortFunctionAssignByDate(a, b) {
+        var o1 = a[colMap['Start']];
+        var o2 = b[colMap['Start']];
+        var p1 = a[colMap['Last Name']];
+        var p2 = b[colMap['Last Name']];
+        if (o1 < o2) return -1;
+        if (o1 > o2) return 1;
+        if (p1 < p2) return -1;
+        if (p1 > p2) return 1;
+        return 0;
+    }
+
+    var checkedIn = [];
+    var checkedOut = [];
+    var dashboardList = [];
+    for (var row = 0; row < sheetData.length; row++) {
+        if (sheetData[row][colMap['End']] != "") {
+            checkedOut.push([sheetData[row][colMap['Last Name']], sheetData[row][colMap['First Name']], sheetData[row][colMap['End']]]);
+        } else if (sheetData[row][colMap['SPOT']] != "" || (spotOnly === undefined || spotOnly === false)) {
+            checkedIn.push([sheetData[row][colMap['Last Name']], sheetData[row][colMap['First Name']], sheetData[row][colMap['Start']]]);
+            var dataName = (sheetData[row][colMap['Last Name']] + ", " + sheetData[row][colMap['First Name']]);
+            dashboardList.push([dataName, sheetData[row][colMap['Team']], sheetData[row][colMap['SPOT']], sheetData[row][colMap['Notes']], sheetData[row][colMap['Start']].toString()]);
+        }
+    }
+
+    for (var i = 0; i < checkedIn.length; i++) {
+        var mbrOut = false;
+        for (var d = 0; d < checkedOut.length; d++) {
+            if (checkedIn[i][0] != checkedOut[d][0] || checkedIn[i][1] != checkedOut[d][1]) continue;
+            if (new Date(checkedIn[i][2]) <= new Date(checkedOut[d][2])) {
+                dashboardList[i].push(checkedOut[d][2].toString());
+                mbrOut = true;
+                break;
+            }
+        }
+    }
+
+    if (dashboardList.length > 0) {
+        dashboardList.sort(function(a, b) {
+            if (a === b || (a[0] === b[0] && a[4] === b[4])) return 0;
+            return a[0] > b[0] ? 1 : -1;
+        });
+        console.log(dashboardList);
+        console.log("COMPLETE: getIncdentAssignmentList");
+        return dashboardList;
+    } else {
+        return false;
     }
 }
