@@ -58,7 +58,7 @@ function createSpotMap(beacon, startTime, endTime) {
     var mapUrl = map.getMapUrl();
     lastMessageTime.toString();
     var mapData = [beacon, mapUrl, lastMessageTime.toString(), lastMessageLat, lastMessageLong];
-    console.log("Created Map URL: " + mapData);
+    //console.log("Created Map URL: " + mapData);
     return mapData;
 }
 

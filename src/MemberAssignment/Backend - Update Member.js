@@ -149,13 +149,15 @@ notes += "Updated at " + dtg + " by " + user +".";
         span.addEvent('Member updated successfully', {memberName: memberName});
         OpenTelemetryGASExporter.endSpan(span);
         OpenTelemetryGASExporter.export(span);
-        return [true, memberName];
+        let msg = [true, memberName];
+        return msg;
     } catch (error) {
         span.setAttribute('error', true);
         span.addEvent('Error updating member', {error: error.toString()});
         OpenTelemetryGASExporter.endSpan(span);
         OpenTelemetryGASExporter.export(span);
         console.log("Update Error: " + error);
-        return [false, error.toString()];
+        let msg = [false, error.toString()];
+        return msg;
     }
 }
