@@ -1,4 +1,4 @@
-function newSyncIncidentMapper(incidentSheetId, incidentName, incidentIsClosed) {
+function syncIncidentMapper(incidentSheetId, incidentName, incidentIsClosed) {
     try {
         console.log("START: Export To SPOT Incident Mapper");
         // Set variables

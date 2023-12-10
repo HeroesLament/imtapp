@@ -88,6 +88,13 @@ function testNewSyncIncidentMapper(){
     newSyncIncidentMapper(incidentSheetId, incidentName, incidentIsClosed);
 }
 
+function testSyncIncidentMapper(){
+  const incidentSheetId = '1tnJBgVIsYBSF-2eTWFe0nHT5bjv3-Stql70DWN95P5g';
+  const incidentName = 'Dev, Dev';
+  const incidentIsClosed = true;
+  syncIncidentMapper(incidentSheetId, incidentName, incidentIsClosed);
+}
+
 function testMapperDiff(){
     const mapperSpreadsheetId = SystemSettings.SPOT_INCIDENT_MAPPER_ID;
     const mapperSnapRange = 'C11:AY1000'; // Snapshot Diffing Range
