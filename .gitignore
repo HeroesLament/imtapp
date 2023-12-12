@@ -1,4 +1,4 @@
-
+node_modules
 *clasp.json
 *ppsscript.json
 /src/IncidentManagement/.clasp/
@@ -6,5 +6,12 @@
 /src/IncidentManagement/node_modules/
 /src/IncidentManagement/package-lock.json
 /src/IncidentManagement/package.json
+/src/MemberAssignmentV2/
+/src/SharedFunctionsV2/
 /.imtapp.json
 /.imtapp.json.bak
+/imtapp.code-workspace
+/src/MemberAssignmentV2/dist/
+/src/ImtAppV2/dist/
+/src/SharedFunctionsV2/dist/
+/src/SharedFunctionsV2/package-lock.json
