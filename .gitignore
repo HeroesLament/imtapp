@@ -6,8 +6,8 @@ node_modules
 /src/IncidentManagement/node_modules/
 /src/IncidentManagement/package-lock.json
 /src/IncidentManagement/package.json
-/src/MemberAssignmentV2/
-/src/SharedFunctionsV2/
+src/MemberAssignmentV2/
+src/SharedFunctionsV2/
 /.imtapp.json
 /.imtapp.json.bak
 /imtapp.code-workspace
