@@ -6,13 +6,13 @@ function newSyncFilterMapper() {
         const mapperSS = SpreadsheetApp.openById(SystemSettings.SPOT_FILTER_MAPPER_ID);
         const logSheet = ss.getSheetByName("IMS SPOT Data");
         const settings = PropertiesService.getScriptProperties();
-        
+
         // Get data from the SPOT API Log Sheet
         const logSheetData = getLogSheetData(logSheet);
         const filterSettings = getFilterSettings(settings);
         const availableIcons = SharedFunctions.getAvailableIcons("SPOT_ICON");
 
-        const { mapperData, mapperMetaData, beaconIcons } = processData(logSheetData, availableIcons, filterSettings);
+        const { mapperData, mapperMetaData, beaconIcons } = processData(logSheetData, filterSettings, availableIcons);
 
         if (mapperData.length > 0) {
             const updateRequests = prepareUpdateRequests(mapperData, mapperMetaData, beaconIcons, filterSettings, ss);
@@ -42,7 +42,7 @@ function getFilterSettings(settings) {
     };
 }
 
-function processData(logSheetData, availableIcons, filterSettings) {
+function processData(logSheetData, filterSettings, availableIcons) {
     // Logic to process logSheetData according to filterSettings and availableIcons
     // Returns an object containing mapperData, mapperMetaData, and beaconIcons
     // Process the log sheet data and return mapperData, mapperMetaData, and beaconIcons.
@@ -64,23 +64,23 @@ function processData(logSheetData, availableIcons, filterSettings) {
         let position = row[5] + " | " + row[6];
         let dtg = Utilities.formatDate(new Date(row[15]), tz, "dd MMM YYYY - HH:mm").toString();
         let dataRow = [
-            candidateBeacon, // Folder ID (Beacon Name)
-            row[2] + " - " + dtg, // Placemark Name (Beacon name + timestamp)
+            row[2], // Folder ID (Beacon Name)
+            [row[2] + " - " + dtg], // Placemark Name (Beacon name + timestamp)
             row[5], // Latitude
             row[6], // Longitude
             "", // Empty Field (Address on the Mapper)
             "Template1", // Template Name
-            row[2], // Beacon Name
-            position, // Position (concatenated lat/long separated by | pipe)
-            row[7], // Device Type
-            row[10], // Device Battery State
-            row[4], // Message Type
-            row[12], // Message Data 1
-            row[13], // Message Data 2
-            row[14], // Received by SPOT (Zulu)
-            row[15], // Received by SPOT (AKST/AKDT)
-            row[16], // Received by IMS (AKST/AKDT)
-            row[17],  // System Delay
+            [row[2]], // Beacon Name
+            [position], // Position (concatenated lat/long separated by | pipe)
+            [row[7]], // Device Type
+            [row[10]], // Device Battery State
+            [row[4]], // Message Type
+            [row[12]], // Message Data 1
+            [row[13]], // Message Data 2
+            [row[14]], // Received by SPOT (Zulu)
+            [row[15]], // Received by SPOT (AKST/AKDT)
+            [row[16]], // Received by IMS (AKST/AKDT)
+            [row[17]],  // System Delay
             "", // Empty Field
             "", // Empty Field
             "", // Empty Field
@@ -109,14 +109,14 @@ function processData(logSheetData, availableIcons, filterSettings) {
             "", // Empty Field
             "", // Empty Field
             "", // Empty Field
-            row[15], // Received by SPOT (AKST/AKDT)
+            [row[15]], // Received by SPOT (AKST/AKDT)
             "", // Empty Field
             "", // Empty Field
             "https://maps.gstatic.com/mapfiles/ridefinder-images/mm_20_gray.png" // Icon URL
         ];
         mapperData.push(dataRow);
 
-        // Handle icon assignment 
+        // Handle icon assignment
         let icon = assignIconForBeacon(candidateBeacon, beaconIcons, availableIcons, lastIcon);
         lastIcon = (lastIcon + 1) % availableIcons.length; // Cycle through available icons
 
