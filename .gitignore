@@ -15,3 +15,7 @@ src/SharedFunctionsV2/
 /src/ImtAppV2/dist/
 /src/SharedFunctionsV2/dist/
 /src/SharedFunctionsV2/package-lock.json
+*.js
+/src/ImtAppV2/.babelrc
+/src/ImtAppV2/package-lock.json
+/src/ImtAppV2/package.json
