@@ -1,0 +1,31 @@
+{
+  "timeZone": "America/Anchorage",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "SystemSettings",
+        "libraryId": "1mMPsAg31j99kyEpamPl6Q1G6RzkU913V-1kw7NhRxl-sXfYtffZItGpx",
+        "version": "27",
+        "developmentMode": false
+      },
+      {
+        "userSymbol": "SharedFunctions",
+        "libraryId": "12BfhvLDT3Ui8bcm--OCrjm2RF6ZzfLeEPwhd56LzJybflkqB8fuxDTuv",
+        "version": "4"
+      }
+    ]
+  },
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "DOMAIN"
+  },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/forms",
+    "https://www.googleapis.com/auth/fusiontables",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.external_request"
+  ]
+}

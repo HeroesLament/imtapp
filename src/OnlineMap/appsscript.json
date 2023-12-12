@@ -1,0 +1,31 @@
+{
+  "timeZone": "America/Anchorage",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "SystemSettings",
+        "version": "0",
+        "libraryId": "1mMPsAg31j99kyEpamPl6Q1G6RzkU913V-1kw7NhRxl-sXfYtffZItGpx",
+        "developmentMode": true
+      },
+      {
+        "userSymbol": "SharedFunctions",
+        "version": "0",
+        "libraryId": "12BfhvLDT3Ui8bcm--OCrjm2RF6ZzfLeEPwhd56LzJybflkqB8fuxDTuv",
+        "developmentMode": true
+      },
+      {
+        "userSymbol": "SPOTAPIIntegration",
+        "version": "0",
+        "libraryId": "1o5rH5JwptaiPsFRh4iVM0WRGV7048IREZyMdEMlJiYDEU3OUYZAg2LPE",
+        "developmentMode": true
+      }
+    ]
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "DOMAIN"
+  }
+}

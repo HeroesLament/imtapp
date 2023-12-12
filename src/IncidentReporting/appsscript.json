@@ -1,0 +1,35 @@
+{
+  "timeZone": "America/Anchorage",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "SharedFunctions",
+        "libraryId": "12BfhvLDT3Ui8bcm--OCrjm2RF6ZzfLeEPwhd56LzJybflkqB8fuxDTuv",
+        "version": "0",
+        "developmentMode": true
+      },
+      {
+        "userSymbol": "SystemSettings",
+        "libraryId": "1mMPsAg31j99kyEpamPl6Q1G6RzkU913V-1kw7NhRxl-sXfYtffZItGpx",
+        "version": "0",
+        "developmentMode": true
+      },
+      {
+        "userSymbol": "OAuth2",
+        "version": "43",
+        "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF"
+      },
+      {
+        "userSymbol": "BetterLog",
+        "version": "27",
+        "libraryId": "1DSyxam1ceq72bMHsE6aOVeOl94X78WCwiYPytKi7chlg4x5GqiNXSw0l"
+      }
+    ]
+  },
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "DOMAIN"
+  }
+}

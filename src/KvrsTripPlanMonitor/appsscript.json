@@ -1,0 +1,25 @@
+{
+  "timeZone": "Etc/GMT",
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "SharedFunctions",
+        "libraryId": "12BfhvLDT3Ui8bcm--OCrjm2RF6ZzfLeEPwhd56LzJybflkqB8fuxDTuv",
+        "version": "4",
+        "developmentMode": false
+      },
+      {
+        "userSymbol": "SystemSettings",
+        "libraryId": "1mMPsAg31j99kyEpamPl6Q1G6RzkU913V-1kw7NhRxl-sXfYtffZItGpx",
+        "version": "0",
+        "developmentMode": true
+      }
+    ]
+  },
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "DOMAIN"
+  }
+}
