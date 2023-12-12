@@ -1,4 +1,4 @@
-function newSyncFilterMapper() {
+function syncFilterMapper() {
     try {
         console.log("START: Export To SPOT Filter Mapper");
 
