@@ -12,6 +12,9 @@ function memberUpdate(logSheetId, memberName, memberTeam, memberSpot, time, date
         span.addEvent('Member status list retrieved', { length: activeMembers.length });
         console.log("memberSpot: " + memberSpot);
         var activeSpots = []
+        // What is this FOR iterator's purpose? Seems to be a check to make sure the member is
+        // actively assigned to the incident prior to updating anything. Maybe a fix for an 
+        // edge case of a member being checked out but an update is attempted?
         for (var row = 0; row < activeMembers.length; row++) {
             console.log(activeMembers[row][0]);
             console.log(memberName)
@@ -36,7 +39,10 @@ function memberUpdate(logSheetId, memberName, memberTeam, memberSpot, time, date
         //get old data
         var lastRecord = [];
         lastRecord = getMemberStatus(logSheetId, memberName);
-        console.log("Last Reccord:" + lastRecord)
+        console.log("Last Record:" + lastRecord)
+        // TODO: re-implement this for iterator to not assert against the header
+        // row, and instead implicitly assume our header positions. The data 
+        // model should not be changing that much. "hrow" indexes should be essentially fixed.
         for (var hrow = 0; hrow < sheetHeadersLen; hrow++) {
             if (sheetHeaders[0][hrow] == "Last Name") {
                 var colLastName = hrow

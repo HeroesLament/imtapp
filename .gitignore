@@ -18,3 +18,5 @@ src/SharedFunctionsV2/
 /src/ImtAppV2/.babelrc
 /src/ImtAppV2/package-lock.json
 /src/ImtAppV2/package.json
+
+src/imtserver/imtclient/dist/

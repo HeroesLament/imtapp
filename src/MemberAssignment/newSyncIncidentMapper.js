@@ -24,10 +24,14 @@ function syncIncidentMapper(incidentSheetId, incidentName, incidentIsClosed) {
         updateIncidentMapper(mapperSheetId, requests);
         const postSnapshot = captureSnapshot(mapperSS, mapperSnapRange);
         const changes = diffSnapshots(preSnapshot, postSnapshot);
-        if (changes.length > 0) {
-          console.log("No changes!")
-        } else {
-            console.log("Changes: " + changes)
+        try {
+            if (changes.length === 0) {
+                console.log("No changes!");
+            } else {
+                console.log("Changes detected:", changes);
+            }
+        } catch (error) {
+            console.error("Error processing changes:", error);
         }
 
         console.log("COMPLETED: Export To SPOT Incident Mapper");
@@ -71,6 +75,8 @@ function processIncidentData(logSheetData, availableIcons, incidentName, inciden
     let beaconIcons = [];
     let lastIcon = 0;
     let tz = Session.getScriptTimeZone();
+
+    console.log(availableIcons);
 
     const mapperSS = SpreadsheetApp.openById(SystemSettings.SPOT_INCIDENT_MAPPER_ID);
     const mapperSheet = mapperSS.getSheets()[1];
@@ -146,11 +152,11 @@ function processIncidentData(logSheetData, availableIcons, incidentName, inciden
 
     // Create a clear request to clear the range where the new data will be set
     let requests = [];
-    const clearRequest = createClearRangeRequest(mapperSheet, lastRow + 1, mapperSheet.getLastRow(), 1, mapperSheet.getLastColumn());
+    const clearRequest = createClearRangeRequest(mapperSheet, mapperLastRow + 1, mapperSheet.getLastRow(), 1, mapperSheet.getLastColumn());
     requests.push(clearRequest);
 
     // Create a set data request to set the new data
-    const setDataRequest = createSetDataRequest(mapperSheet, mapperData, lastRow + 1, 1);
+    const setDataRequest = createSetDataRequest(mapperSheet, mapperData, mapperLastRow, 2);
     requests.push(setDataRequest);
 
     // Return the requests along with the mapperData and mapperMetaData
