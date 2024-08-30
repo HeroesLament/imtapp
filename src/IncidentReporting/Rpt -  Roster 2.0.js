@@ -1,3 +1,12 @@
+/**
+ * Generates a detailed roster report for a specific incident from various data sources.
+ * This function pulls data from Google Sheets to populate a Google Doc report template.
+ * It handles daily reports for the duration of the incident, formats the document, and manages report versioning.
+ *
+ * @param {string} incidentFolderId - The ID of the Google Drive folder where the incident reports are managed.
+ * @returns {[boolean, string]} An array where the first element is a success flag (true/false)
+ *                              and the second element is the URL of the new report or an error message.
+ */
 function generateRosterReport(incidentFolderId) {
     try {
         // THIS IS FOR TS
@@ -69,6 +78,21 @@ function generateRosterReport(incidentFolderId) {
     }
 }
 
+/**
+ * Creates a roster report for a specific incident based on member and incident data.
+ * This function coordinates the extraction and formatting of data from multiple sources, 
+ * primarily Google Sheets and Google Docs, to generate a detailed roster report in a Google Doc.
+ * The report includes volunteer data, assignment schedules, and incident details.
+ *
+ * @param {string} logId - The ID of the Google Sheet containing log information for the incident.
+ * @param {string} reportId - The ID of the Google Document where the report will be compiled.
+ * @param {string} incidentName - The name of the incident.
+ * @param {string} incidentNumber - The unique number identifying the incident.
+ * @param {string} incidentStartDate - The starting date of the incident.
+ * @param {string} incidentEndDate - The ending date of the incident.
+ * @returns {[boolean, string]} An array where the first element indicates the success (true) or failure (false) 
+ *                              of the report generation, and the second element is the URL of the report or an error message.
+ */
 function createRosterReport(logId, reportId, incidentName, incidentNumber, incidentStartDate, incidentEndDate) {
     try {
         var tz = Session.getScriptTimeZone();
