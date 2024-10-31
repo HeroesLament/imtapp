@@ -43,15 +43,11 @@ build/
 
 # Custom exclusions (remaining relevant ones)
 *clasp.json
-/src/IncidentManagement/.clasp/
 /src/SystemSettings/
-src/MemberAssignmentV2/
 /.imtapp.json
 /.imtapp.json.bak
-/imtapp.code-workspace
-/src/ImtAppV2/.babelrc
 
-src/imtserver/imtclient/dist/
 
 # VSCode settings
 .vscode/settings.json
+imtapp.code-workspace
